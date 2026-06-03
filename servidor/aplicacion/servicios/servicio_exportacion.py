@@ -36,12 +36,18 @@ def export_movimientos_xlsx(
     db: Session,
     *,
     producto_id: int | None = None,
+    tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
     limit: int = 5000,
 ) -> BytesIO:
     rows = list_movimientos_filtrados(
-        db, producto_id=producto_id, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta, limit=limit
+        db,
+        producto_id=producto_id,
+        tipo=tipo,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        limit=limit,
     )
     wb = Workbook()
     ws = wb.active
@@ -84,12 +90,18 @@ def export_movimientos_pdf(
     db: Session,
     *,
     producto_id: int | None = None,
+    tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
     limit: int = 500,
 ) -> BytesIO:
     rows = list_movimientos_filtrados(
-        db, producto_id=producto_id, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta, limit=limit
+        db,
+        producto_id=producto_id,
+        tipo=tipo,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        limit=limit,
     )
     pdf = FPDF(orientation="L", unit="mm", format="A4")
     pdf.set_auto_page_break(auto=True, margin=12)

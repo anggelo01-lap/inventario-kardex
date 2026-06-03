@@ -34,6 +34,7 @@ def export_movimientos_excel(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
     producto_id: int | None = Query(None),
+    tipo: str | None = Query(None),
     fecha_desde: date | None = Query(None),
     fecha_hasta: date | None = Query(None),
     limit: int = Query(5000, ge=1, le=10000),
@@ -41,6 +42,7 @@ def export_movimientos_excel(
     bio = export_movimientos_xlsx(
         db,
         producto_id=producto_id,
+        tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
         limit=limit,
@@ -57,6 +59,7 @@ def export_movimientos_pdf_route(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
     producto_id: int | None = Query(None),
+    tipo: str | None = Query(None),
     fecha_desde: date | None = Query(None),
     fecha_hasta: date | None = Query(None),
     limit: int = Query(500, ge=1, le=2000),
@@ -64,6 +67,7 @@ def export_movimientos_pdf_route(
     bio = export_movimientos_pdf(
         db,
         producto_id=producto_id,
+        tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
         limit=limit,

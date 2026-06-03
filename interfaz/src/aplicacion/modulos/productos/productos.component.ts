@@ -191,7 +191,13 @@ export class ProductosComponent implements OnInit {
   }
 
   nuevo(): void {
-    const ref = this.dialog.open(ProductoDialogComponent, { width: '520px', data: {} });
+    const ref = this.dialog.open(ProductoDialogComponent, {
+      width: '920px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      autoFocus: false,
+      data: {}
+    });
     ref.afterClosed().subscribe((saved) => {
       if (saved) {
         this.snack.open('Producto creado', 'OK', { duration: 3000 });
@@ -202,7 +208,10 @@ export class ProductosComponent implements OnInit {
 
   editar(row: Producto): void {
     const ref = this.dialog.open(ProductoDialogComponent, {
-      width: '520px',
+      width: '920px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      autoFocus: false,
       data: { producto: row }
     });
     ref.afterClosed().subscribe((saved) => {

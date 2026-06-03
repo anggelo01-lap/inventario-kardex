@@ -166,7 +166,7 @@
 /* ── Summary Chips ───────────────────────────────────────────────────── */
 .summary-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -198,6 +198,7 @@
 
   &.entrada-icon { background: rgba(16,185,129,0.12); mat-icon { color: #10b981; } }
   &.salida-icon  { background: rgba(239,68,68,0.12);  mat-icon { color: #ef4444; } }
+  &.ajuste-icon  { background: rgba(59,130,246,0.12); mat-icon { color: #60a5fa; } }
   &.total-icon   { background: rgba(139,92,246,0.12); mat-icon { color: #8b5cf6; } }
 }
 
@@ -242,6 +243,48 @@
 }
 
 .filter-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.filters-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  color: #fca5a5;
+  font-size: 0.84rem;
+  font-weight: 500;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: var(--color-text-3);
+  }
+}
 
 /* ── Loading ─────────────────────────────────────────────────────────── */
 .loading { display: flex; justify-content: center; padding: 40px; }
@@ -429,10 +472,15 @@
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .filters-grid { grid-template-columns: 1fr 1fr 1fr; }
-  .summary-row  { grid-template-columns: 1fr; }
+  .summary-row  { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 768px) {
   .filters-grid { grid-template-columns: 1fr 1fr; }
   .top-row { padding: 16px; }
+  .summary-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .filters-grid { grid-template-columns: 1fr; }
 }

@@ -5,6 +5,7 @@ import { environment } from '../../../entornos/entorno';
 
 export interface ExportMovimientosFilters {
   producto_id?: number | null;
+  tipo?: 'entrada' | 'salida' | 'ajuste' | null;
   fecha_desde?: string | null;
   fecha_hasta?: string | null;
   limit?: number;
@@ -41,6 +42,9 @@ export class ExportService {
     }
     if (filters.producto_id != null) {
       p = p.set('producto_id', String(filters.producto_id));
+    }
+    if (filters.tipo) {
+      p = p.set('tipo', filters.tipo);
     }
     if (filters.fecha_desde) {
       p = p.set('fecha_desde', filters.fecha_desde);

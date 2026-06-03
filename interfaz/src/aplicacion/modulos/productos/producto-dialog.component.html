@@ -1,6 +1,6 @@
-<h2 mat-dialog-title>{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h2>
+<h2 mat-dialog-title class="dialog-title">{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h2>
 
-<mat-dialog-content>
+<mat-dialog-content class="dialog-content">
   <form [formGroup]="form" class="producto-form">
     <div class="image-section">
       <div class="image-preview" [class.image-preview--empty]="!previewUrl">
@@ -101,7 +101,7 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions align="end" class="dialog-actions">
   <button mat-button type="button" (click)="cancel()">Cancelar</button>
   <button mat-raised-button color="primary" type="button" [disabled]="saving" (click)="submit()">
     <mat-spinner *ngIf="saving || uploadingImage" diameter="18"></mat-spinner>

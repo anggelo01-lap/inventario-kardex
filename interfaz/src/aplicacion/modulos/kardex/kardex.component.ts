@@ -23,7 +23,6 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   dataSource = new MatTableDataSource<MovimientoLista>([]);
   searchCtrl = new FormControl<string>('', { nonNullable: true });
   productoSearchCtrl = new FormControl<string>('', { nonNullable: true });
-  private rawData: MovimientoLista[] = [];
   loading = true;
   exporting = false;
   productos: Producto[] = [];
@@ -61,16 +60,94 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.dataSource.data.length > 0;
   }
 
+  get visibleRows(): MovimientoLista[] {
+    return this.dataSource.filteredData;
+  }
+
+  get hasVisibleRows(): boolean {
+    return this.visibleRows.length > 0;
+  }
+
   get totalMovimientos(): number {
-    return this.dataSource.data.length;
+    return this.visibleRows.length;
   }
 
   get totalEntradas(): number {
-    return this.dataSource.data.filter(r => r.tipo === 'entrada').length;
+    return this.visibleRows.filter(r => r.tipo === 'entrada').length;
   }
 
   get totalSalidas(): number {
-    return this.dataSource.data.filter(r => r.tipo === 'salida').length;
+    return this.visibleRows.filter(r => r.tipo === 'salida').length;
+  }
+
+  get totalAjustes(): number {
+    return this.visibleRows.filter(r => r.tipo === 'ajuste').length;
+  }
+
+  get searchTerm(): string {
+    return this.searchCtrl.value.trim();
+  }
+
+  get hasSearchTerm(): boolean {
+    return this.searchTerm.length > 0;
+  }
+
+  get selectedProducto(): Producto | null {
+    const productoId = this.filters.controls.producto_id.value;
+    if (productoId == null) {
+      return null;
+    }
+    return this.productos.find((producto) => producto.id === productoId) ?? null;
+  }
+
+  get selectedProductoText(): string {
+    const producto = this.selectedProducto;
+    if (!producto) {
+      return '';
+    }
+    return `${producto.codigo} - ${producto.nombre}`;
+  }
+
+  get hasActiveFilters(): boolean {
+    const v = this.filters.getRawValue();
+    return Boolean(
+      v.producto_id != null ||
+      v.tipo.trim() ||
+      v.fecha_desde.trim() ||
+      v.fecha_hasta.trim() ||
+      this.hasSearchTerm
+    );
+  }
+
+  get dateRangeError(): string {
+    const { fecha_desde, fecha_hasta } = this.filters.getRawValue();
+    if (!fecha_desde.trim() || !fecha_hasta.trim()) {
+      return '';
+    }
+    if (fecha_desde <= fecha_hasta) {
+      return '';
+    }
+    return 'La fecha "Desde" no puede ser mayor que la fecha "Hasta".';
+  }
+
+  get emptyStateTitle(): string {
+    if (this.hasSearchTerm) {
+      return 'Sin coincidencias';
+    }
+    if (this.hasActiveFilters) {
+      return 'Sin resultados';
+    }
+    return 'Sin movimientos';
+  }
+
+  get emptyStateMessage(): string {
+    if (this.hasSearchTerm) {
+      return `No encontramos coincidencias para "${this.searchTerm}".`;
+    }
+    if (this.hasActiveFilters) {
+      return 'No hay movimientos para los filtros aplicados. Prueba con otro rango de fechas, tipo o producto.';
+    }
+    return 'Todavia no hay movimientos registrados en el kardex.';
   }
 
   fechaDay(row: MovimientoLista): string {
@@ -187,6 +264,12 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refresh(): void {
+    if (this.dateRangeError) {
+      this.loading = false;
+      this.dataSource.data = [];
+      this.snack.open(this.dateRangeError, 'Cerrar');
+      return;
+    }
     this.loading = true;
     const v = this.filters.getRawValue();
     this.movimientos
@@ -199,9 +282,9 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .subscribe({
         next: (rows) => {
-          this.rawData = rows;
           this.dataSource.data = rows;
-          this.dataSource.filter = this.searchCtrl.value.trim();
+          this.dataSource.filter = this.searchTerm;
+          this.paginator?.firstPage();
           this.loading = false;
         },
         error: () => {
@@ -212,7 +295,25 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   buscar(): void {
+    if (this.dateRangeError) {
+      this.snack.open(this.dateRangeError, 'Cerrar');
+      return;
+    }
     this.applyFiltersToUrl();
+  }
+
+  limpiarFiltros(): void {
+    this.filters.reset({
+      producto_id: null,
+      tipo: '',
+      fecha_desde: '',
+      fecha_hasta: ''
+    });
+    this.searchCtrl.setValue('');
+    this.productoSearchCtrl.setValue('');
+    this.productosFiltradosSelect = this.productos.slice(0, this.SELECT_LIMIT);
+    this.productoSearchActivo = false;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
   }
 
   exportXlsx(): void {
@@ -221,6 +322,7 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
     this.exportSvc
       .downloadMovimientosXlsx({
         producto_id: v.producto_id,
+        tipo: (v.tipo?.trim() || null) as 'entrada' | 'salida' | 'ajuste' | null,
         fecha_desde: v.fecha_desde?.trim() || null,
         fecha_hasta: v.fecha_hasta?.trim() || null,
         limit: 5000
@@ -243,6 +345,7 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
     this.exportSvc
       .downloadMovimientosPdf({
         producto_id: v.producto_id,
+        tipo: (v.tipo?.trim() || null) as 'entrada' | 'salida' | 'ajuste' | null,
         fecha_desde: v.fecha_desde?.trim() || null,
         fecha_hasta: v.fecha_hasta?.trim() || null,
         limit: 2000
