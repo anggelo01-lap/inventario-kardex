@@ -9,6 +9,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEFAULT_SECRET_KEY = "change_me_super_secret_key"
 DEFAULT_DATABASE_URL = "postgresql+psycopg2://postgres:7721@localhost:5432/inventario_kardex"
 DEVELOPMENT_ENVS = {"development", "dev", "local", "test"}
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "https://inventario-kardex.vercel.app",
+    "https://inventario-kardex-k0bat6nn2-a44829753-4055s-projects.vercel.app",
+)
 
 
 def normalize_database_url(url: str) -> str:
@@ -44,7 +50,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
 
     database_url: str = DEFAULT_DATABASE_URL
-    backend_cors_origins: str = "http://localhost:4200,http://127.0.0.1:4200"
+    backend_cors_origins: str = ",".join(DEFAULT_CORS_ORIGINS)
     media_root: str = "subidas"
     media_url_prefix: str = "/subidas"
     max_image_upload_mb: int = 5
@@ -98,7 +104,16 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+        origins: List[str] = []
+        seen: set[str] = set()
+        configured_origins = [origin.strip().rstrip("/") for origin in self.backend_cors_origins.split(",")]
+
+        for origin in [*DEFAULT_CORS_ORIGINS, *configured_origins]:
+            normalized = origin.strip().rstrip("/")
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                origins.append(normalized)
+        return origins
 
     @property
     def is_development(self) -> bool:
