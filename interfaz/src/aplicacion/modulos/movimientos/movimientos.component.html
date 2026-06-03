@@ -1,0 +1,205 @@
+<!-- Movimientos -->
+<div class="page-wrap">
+
+  <div class="page-head">
+    <div>
+      <h1>Movimientos</h1>
+      <p class="hint">Registra entradas, salidas y ajustes de stock en el inventario.</p>
+    </div>
+    <a mat-stroked-button routerLink="/kardex">
+      <mat-icon>receipt_long</mat-icon> Ver Kardex completo
+    </a>
+  </div>
+
+  <div class="form-panel">
+    <div class="form-panel__head">
+      <div class="form-panel__title">
+        <span class="accent-bar"></span>
+        <span>Nuevo movimiento</span>
+      </div>
+    </div>
+
+    <div class="empty-state compact" *ngIf="!hasProductos">
+      <mat-icon>inventory</mat-icon>
+      <h2>No hay productos disponibles</h2>
+      <p>Primero crea un producto para registrar movimientos.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid" *ngIf="hasProductos">
+
+      <mat-form-field appearance="outline">
+        <mat-label>Producto *</mat-label>
+        <mat-select formControlName="producto_id">
+          <mat-option [value]="null" disabled>Seleccione...</mat-option>
+          <mat-option *ngFor="let p of productos" [value]="p.id">
+            {{ p.codigo }} — {{ p.nombre }}
+          </mat-option>
+        </mat-select>
+        <mat-error>Elige un producto</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          {{
+            usaClientes
+              ? 'Cliente'
+              : usaProveedores
+                ? 'Proveedor'
+                : 'Cliente / Proveedor'
+          }}
+        </mat-label>
+        <mat-select
+          [formControlName]="usaClientes ? 'cliente_id' : 'proveedor_id'"
+          [disabled]="!usaClientes && !usaProveedores"
+        >
+          <mat-option [value]="null">
+            {{
+              usaClientes
+                ? 'Sin cliente'
+                : usaProveedores
+                  ? 'Sin proveedor'
+                  : 'No aplica para ajuste'
+            }}
+          </mat-option>
+          <mat-option *ngFor="let t of tercerosDisponibles" [value]="t.id">
+            {{ t.nombre }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo *</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option value="entrada">
+            <span class="opt-tipo entrada">↓ Entrada</span>
+          </mat-option>
+          <mat-option value="salida">
+            <span class="opt-tipo salida">↑ Salida</span>
+          </mat-option>
+          <mat-option value="ajuste">
+            <span class="opt-tipo ajuste">≈ Ajuste</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Cantidad *</mat-label>
+        <input matInput type="number" formControlName="cantidad" min="1" />
+        <mat-error>Mínimo 1</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Costo unitario</mat-label>
+        <span matTextPrefix>PEN&nbsp;</span>
+        <input matInput type="number" formControlName="costo_unitario" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="span-2">
+        <mat-label>Referencia</mat-label>
+        <mat-icon matPrefix>tag</mat-icon>
+        <input matInput formControlName="referencia" placeholder="N° factura, guía, orden..." />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="span-3">
+        <mat-label>Motivo</mat-label>
+        <mat-icon matPrefix>notes</mat-icon>
+        <input matInput formControlName="motivo" placeholder="Ej: Venta de repuesto, devolución de cliente..." />
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving || form.invalid" class="btn-registrar">
+          <mat-spinner *ngIf="saving" diameter="18" class="inline-spin"></mat-spinner>
+          <mat-icon *ngIf="!saving">add_circle</mat-icon>
+          <span>{{ saving ? 'Registrando...' : 'Registrar' }}</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Historial reciente</h2>
+    <span class="section-count" *ngIf="!loading && hasRows">{{ dataSource.data.length }} registros</span>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div class="table-wrap" *ngIf="!loading && hasRows">
+    <table mat-table [dataSource]="dataSource">
+
+      <ng-container matColumnDef="fecha_movimiento">
+        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <td mat-cell *matCellDef="let row">
+          <div class="fecha-cell">
+            <span class="fecha-day">{{ row.fecha_movimiento | date:'dd MMM yyyy' }}</span>
+            <span class="fecha-time">{{ row.fecha_movimiento | date:'h:mm a' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="producto">
+        <th mat-header-cell *matHeaderCellDef>Producto</th>
+        <td mat-cell *matCellDef="let row">
+          <div class="product-cell">
+            <span class="product-code">{{ row.producto_codigo ?? '-' }}</span>
+            <span class="product-name">{{ row.producto_nombre ?? '' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let row">{{ clienteLabel(row) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge-tipo" [class]="row.tipo">
+            <span class="badge-dot"></span>{{ row.tipo }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef>Cant.</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="qty-cell" [class]="row.tipo">
+            {{ row.tipo === 'salida' ? '-' : '+' }}{{ row.cantidad }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>Stock</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="stock-arrow" *ngIf="row.stock_anterior != null && row.stock_posterior != null">
+            <span class="stock-val">{{ row.stock_anterior }}</span>
+            <span class="stock-sep">→</span>
+            <span class="stock-val">{{ row.stock_posterior }}</span>
+          </span>
+          <span *ngIf="row.stock_anterior == null" class="no-data">—</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="usuario_username">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let row">{{ row.usuario_username }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" [class]="'row-' + row.tipo"></tr>
+    </table>
+    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 50]" showFirstLastButtons></mat-paginator>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !hasRows">
+    <mat-icon>history</mat-icon>
+    <h2>Sin movimientos registrados</h2>
+    <p>Cuando registres tu primer movimiento, aparecerá aquí.</p>
+  </div>
+
+</div>
+

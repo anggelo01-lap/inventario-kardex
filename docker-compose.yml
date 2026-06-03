@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: inventario_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inventario_kardex
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "7721"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./base-datos/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inventario_kardex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  servidor:
+    build:
+      context: ./servidor
+    container_name: inventario_servidor
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: Inventario Kardex API
+      APP_ENV: development
+      APP_DEBUG: "true"
+      APP_LOG_LEVEL: INFO
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      SECRET_KEY: ${SECRET_KEY:-dev_only_change_me_local_secret}
+      ALGORITHM: HS256
+      BACKEND_CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
+      DATABASE_URL: postgresql+psycopg2://postgres:7721@db:5432/inventario_kardex
+      # ── Admin inicial (se crea/actualiza en cada arranque) ──
+      ADMIN_USERNAME: admin
+      ADMIN_EMAIL: admin@carguero.com
+      ADMIN_FULL_NAME: Administrador
+      ADMIN_PASSWORD: Admin12345
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./base-datos:/data:ro
+
+  interfaz:
+    build:
+      context: ./interfaz
+    container_name: inventario_interfaz
+    restart: unless-stopped
+    depends_on:
+      - servidor
+    ports:
+      - "4200:80"
+
+volumes:
+  postgres_data:

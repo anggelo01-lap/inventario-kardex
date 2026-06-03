@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+tests/
+docs/
+*.log
+uploads/
+alembic/versions/*.pyc

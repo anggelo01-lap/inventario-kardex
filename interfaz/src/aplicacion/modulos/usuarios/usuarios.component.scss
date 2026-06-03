@@ -1,0 +1,254 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   USUARIOS — Premium Dark Design
+═══════════════════════════════════════════════════════════════════════ */
+
+.inventory-page {
+  display: grid;
+  gap: 20px;
+  animation: fade-up 0.4s ease both;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────── */
+.inventory-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 22px 28px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+}
+
+.toolbar-copy {
+  h1, p { margin: 0; }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, #ffffff 30%, #e8223f 90%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e11d48;
+  margin: 0 0 6px !important;
+}
+
+.subtitle {
+  margin-top: 4px !important;
+  color: var(--color-text-3);
+  font-size: 0.86rem;
+}
+
+.toolbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-refresh {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────── */
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+}
+
+/* ── List Header ──────────────────────────────────────────────────────── */
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 4px;
+}
+
+.list-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── User List ────────────────────────────────────────────────────────── */
+.user-list {
+  display: grid;
+  gap: 10px;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: rgba(200,16,46,0.25);
+    background: rgba(255,255,255,0.055);
+    transform: translateX(3px);
+  }
+
+  &.inactive {
+    opacity: 0.55;
+    border-style: dashed;
+  }
+}
+
+/* ── Avatar ───────────────────────────────────────────────────────────── */
+.user-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #475569, #334155);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+
+  &.admin {
+    background: linear-gradient(135deg, #c8102e, #7e0a1b);
+    border-color: rgba(200,16,46,0.40);
+    box-shadow: 0 4px 16px rgba(200,16,46,0.40);
+  }
+}
+
+/* ── User Info ────────────────────────────────────────────────────────── */
+.user-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.user-fullname {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+.user-username {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+
+.user-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--color-border);
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+
+/* ── Role Field ───────────────────────────────────────────────────────── */
+.user-role-wrap, .user-status-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.role-field {
+  width: 130px;
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background: rgba(255,255,255,0.04) !important;
+  }
+
+  ::ng-deep .mat-mdc-select-value-text {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-1);
+  }
+}
+
+.role-opt {
+  font-size: 0.84rem;
+  font-weight: 600;
+  &.admin   { color: #f87171; }
+  &.usuario { color: #60a5fa; }
+}
+
+/* ── Status Badge ─────────────────────────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &.active        { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+  &.inactive-badge{ background: rgba(100,116,139,0.15); color: #64748b; border: 1px solid rgba(100,116,139,0.25); }
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ── Spinner inline ───────────────────────────────────────────────────── */
+.user-spinner {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .inventory-toolbar { grid-template-columns: 1fr; }
+  .user-card {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .user-role-wrap, .user-status-wrap { flex-direction: row; }
+}

@@ -1,0 +1,110 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="producto-form">
+    <div class="image-section">
+      <div class="image-preview" [class.image-preview--empty]="!previewUrl">
+        <img *ngIf="previewUrl; else emptyImage" [src]="previewUrl" alt="Vista previa del producto" />
+        <ng-template #emptyImage>
+          <div class="image-placeholder">
+            <mat-icon>inventory_2</mat-icon>
+            <span>Sin imagen</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="image-actions">
+        <div class="image-actions__copy">
+          <h3>Imagen del producto</h3>
+          <p>Sube una foto real para mostrarla en el catalogo y en las consultas visuales.</p>
+          <span *ngIf="selectedImageName" class="file-pill">{{ selectedImageName }}</span>
+        </div>
+
+        <div class="image-actions__buttons">
+          <input #imageInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden (change)="onImageSelected($event)" />
+          <button mat-stroked-button type="button" [disabled]="saving" (click)="imageInput.click()">
+            <mat-icon>upload</mat-icon>
+            Subir imagen
+          </button>
+          <button mat-button type="button" [disabled]="saving || (!previewUrl && !form.controls.image_url.value)" (click)="clearImage()">
+            Quitar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Codigo</mat-label>
+        <input matInput formControlName="codigo" />
+        <mat-error>Obligatorio</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombre" />
+        <mat-error>Obligatorio</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Descripcion</mat-label>
+        <textarea matInput formControlName="descripcion" rows="2"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="categoria_id">
+          <mat-option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</mat-option>
+        </mat-select>
+        <mat-error>Obligatorio</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Proveedor</mat-label>
+        <mat-select formControlName="proveedor_id">
+          <mat-option [value]="null">Sin proveedor</mat-option>
+          <mat-option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Tipo</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>URL externa de imagen</mat-label>
+        <input matInput formControlName="image_url" placeholder="https://..." />
+        <mat-hint>Opcional si no quieres subir archivo.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Precio</mat-label>
+        <input matInput type="number" formControlName="precio" />
+        <mat-error>Minimo 0</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Stock minimo</mat-label>
+        <input matInput type="number" formControlName="stock_minimo" />
+        <mat-error>Minimo 0</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half" *ngIf="!isEdit">
+        <mat-label>Stock inicial</mat-label>
+        <input matInput type="number" formControlName="stock_inicial" />
+        <mat-error>Minimo 0</mat-error>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" type="button" [disabled]="saving" (click)="submit()">
+    <mat-spinner *ngIf="saving || uploadingImage" diameter="18"></mat-spinner>
+    <span *ngIf="!(saving || uploadingImage)">{{ isEdit ? 'Guardar cambios' : 'Guardar' }}</span>
+  </button>
+</mat-dialog-actions>

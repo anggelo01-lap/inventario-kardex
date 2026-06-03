@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" />
+      <mat-error>Obligatorio</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Contacto</mat-label>
+      <input matInput formControlName="contacto" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Telefono</mat-label>
+      <input matInput formControlName="telefono" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Direccion</mat-label>
+      <input matInput formControlName="direccion" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="3" formControlName="notas"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" type="button" [disabled]="saving" (click)="submit()">
+    {{ isEdit ? 'Guardar cambios' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

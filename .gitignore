@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# FastAPI / entorno local
+servidor/.env
+servidor/.env.local
+servidor/.env.*
+!servidor/.env.example
+!servidor/.env.neon.example
+
+# Logs y backups de BD
+servidor/*.log
+servidor/backup.sql
+*.log
+
+# Subidas generadas en runtime
+servidor/subidas/productos/*
+!servidor/subidas/productos/.gitkeep
+
+# Node / Angular
+interfaz/node_modules/
+interfaz/dist/
+interfaz/.angular/
+interfaz/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

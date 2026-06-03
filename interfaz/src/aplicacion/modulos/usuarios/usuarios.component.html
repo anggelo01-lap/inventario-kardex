@@ -1,0 +1,87 @@
+<!-- Usuarios -->
+<div class="inventory-page">
+
+  <section class="inventory-toolbar">
+    <div class="toolbar-copy">
+      <p class="eyebrow">Administracion</p>
+      <h1>Usuarios</h1>
+      <p class="subtitle">Gestiona cuentas, roles y estado de acceso al sistema.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-stroked-button type="button" (click)="refresh()" [disabled]="loading" class="btn-refresh">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <div class="list-header">
+      <span class="list-count">{{ dataSource.data.length }} usuarios registrados</span>
+    </div>
+
+    <div class="user-list">
+      <div class="user-card" *ngFor="let row of dataSource.data" [class.inactive]="!row.is_active">
+
+        <div class="user-avatar" [class.admin]="row.role === 'admin'">
+          {{ (row.full_name || row.username).charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+          <div class="user-name-row">
+            <span class="user-fullname">{{ row.full_name || row.username }}</span>
+            <span class="user-username">&#64;{{ row.username }}</span>
+          </div>
+          <div class="user-meta">
+            <span class="meta-chip" *ngIf="row.email">
+              <mat-icon>email</mat-icon>{{ row.email }}
+            </span>
+          </div>
+        </div>
+
+        <div class="user-role-wrap">
+          <span class="field-label">Rol</span>
+          <mat-form-field appearance="outline" class="role-field" subscriptSizing="dynamic">
+            <mat-select
+              [value]="row.role"
+              [disabled]="updatingId === row.id"
+              (selectionChange)="cambiarRol(row, $event.value)"
+            >
+              <mat-option value="usuario">Usuario</mat-option>
+              <mat-option value="admin">Admin</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="user-status-wrap">
+          <span class="status-badge" [class.active]="row.is_active" [class.inactive-badge]="!row.is_active">
+            <span class="status-dot"></span>
+            {{ row.is_active ? 'Activo' : 'Inactivo' }}
+          </span>
+          <mat-form-field appearance="outline" class="role-field" subscriptSizing="dynamic">
+            <mat-select
+              [value]="row.is_active"
+              [disabled]="updatingId === row.id"
+              (selectionChange)="cambiarActivo(row, $event.value)"
+            >
+              <mat-option [value]="true">Activo</mat-option>
+              <mat-option [value]="false">Inactivo</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="user-spinner" *ngIf="updatingId === row.id">
+          <mat-spinner diameter="20"></mat-spinner>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+

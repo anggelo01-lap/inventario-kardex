@@ -1,0 +1,68 @@
+<button class="chat-fab" type="button" (click)="toggle()" aria-label="Abrir asistente de inventario">
+  <span class="chat-fab__pulse"></span>
+  <mat-icon>{{ opened ? 'close' : 'smart_toy' }}</mat-icon>
+</button>
+
+<section class="chat-panel" *ngIf="opened" aria-label="Asistente de inventario">
+  <div class="chat-shell">
+    <header class="chat-header">
+      <div class="chat-avatar">
+        <mat-icon>smart_toy</mat-icon>
+      </div>
+      <div class="chat-header__copy">
+        <h3>Asistente</h3>
+      </div>
+    </header>
+
+    <div class="chat-body">
+      <div class="messages" #messageList>
+        <div class="message" *ngFor="let msg of messages" [class.user]="msg.role === 'user'">
+          <div class="message__avatar" *ngIf="msg.role === 'assistant'">
+            <mat-icon>smart_toy</mat-icon>
+          </div>
+          <div class="message__content">
+            <div class="bubble">
+              <p>{{ msg.text }}</p>
+            </div>
+            <div class="message-options" *ngIf="msg.options?.length && !loading">
+              <button type="button" class="option-button" *ngFor="let option of msg.options" (click)="selectOption(option)">
+                {{ option.label }}
+              </button>
+            </div>
+            <span class="message__time">{{ msg.time }}</span>
+          </div>
+        </div>
+
+        <div class="message" *ngIf="loading">
+          <div class="message__avatar">
+            <mat-icon>smart_toy</mat-icon>
+          </div>
+          <div class="message__content">
+            <div class="bubble bubble--loading">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form class="chat-form" (submit)="send($event)">
+      <label class="chat-input" [class.chat-input--disabled]="loading">
+        <mat-icon>forum</mat-icon>
+        <input
+          #promptInput
+          type="text"
+          [formControl]="prompt"
+          placeholder="Escribe un mensaje"
+          autocomplete="off"
+        />
+        <button class="send-button" type="submit" [disabled]="loading || prompt.invalid" aria-label="Enviar consulta">
+          <mat-spinner *ngIf="loading" diameter="18"></mat-spinner>
+          <mat-icon *ngIf="!loading">north_east</mat-icon>
+        </button>
+      </label>
+    </form>
+  </div>
+</section>

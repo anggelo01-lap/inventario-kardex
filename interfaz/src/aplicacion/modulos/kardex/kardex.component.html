@@ -1,0 +1,213 @@
+<!-- Kardex -->
+<div class="page-wrap">
+
+  <div class="top-row">
+    <div>
+      <h1>Kardex</h1>
+      <p class="hint">Historial completo de movimientos · Filtra, analiza y exporta.</p>
+    </div>
+    <div class="top-actions">
+      <a mat-stroked-button routerLink="/movimientos">
+        <mat-icon>add_circle_outline</mat-icon>
+        Registrar movimiento
+      </a>
+      <button *ngIf="isAdmin" mat-stroked-button type="button" [disabled]="exporting" (click)="exportXlsx()">
+        <mat-icon>table_chart</mat-icon> Excel
+      </button>
+      <button *ngIf="isAdmin" mat-stroked-button type="button" [disabled]="exporting" (click)="exportPdf()">
+        <mat-icon>picture_as_pdf</mat-icon> PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-row" *ngIf="!loading && hasRows">
+    <div class="summary-chip">
+      <div class="chip-icon total-icon">
+        <mat-icon>swap_horiz</mat-icon>
+      </div>
+      <div class="chip-data">
+        <span class="chip-value">{{ totalMovimientos }}</span>
+        <span class="chip-label">Movimientos mostrados</span>
+      </div>
+    </div>
+    <div class="summary-chip">
+      <div class="chip-icon entrada-icon">
+        <mat-icon>south_west</mat-icon>
+      </div>
+      <div class="chip-data">
+        <span class="chip-value">{{ totalEntradas }}</span>
+        <span class="chip-label">Entradas</span>
+      </div>
+    </div>
+    <div class="summary-chip">
+      <div class="chip-icon salida-icon">
+        <mat-icon>north_east</mat-icon>
+      </div>
+      <div class="chip-data">
+        <span class="chip-value">{{ totalSalidas }}</span>
+        <span class="chip-label">Salidas</span>
+      </div>
+    </div>
+  </div>
+
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <form [formGroup]="filters" class="filters-grid" (ngSubmit)="buscar()">
+        <mat-form-field appearance="outline">
+          <mat-label>Producto</mat-label>
+          <mat-select formControlName="producto_id" #productoSelect>
+            <div class="select-search-wrap">
+              <mat-icon class="select-search-icon">search</mat-icon>
+              <input
+                class="select-search-input"
+                type="text"
+                [formControl]="productoSearchCtrl"
+                placeholder="Buscar por código o nombre..."
+                (keydown.space)="$event.stopPropagation()"
+                autocomplete="off"
+              />
+              <button
+                *ngIf="productoSearchCtrl.value"
+                class="select-search-clear"
+                type="button"
+                (click)="productoSearchCtrl.setValue(''); $event.stopPropagation()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <mat-option [value]="null">Todos los productos</mat-option>
+            <mat-option *ngFor="let p of productosFiltradosSelect" [value]="p.id">
+              <span class="opt-code">{{ p.codigo }}</span>
+              <span class="opt-sep">—</span>
+              <span class="opt-name">{{ p.nombre }}</span>
+            </mat-option>
+            <mat-option *ngIf="productosFiltradosSelect.length === 0" disabled>
+              Sin resultados para "{{ productoSearchCtrl.value }}"
+            </mat-option>
+            <mat-option *ngIf="!productoSearchActivo && productos.length > 30" disabled class="opt-hint">
+              <mat-icon style="font-size:14px;width:14px;height:14px;margin-right:4px">info_outline</mat-icon>
+              Escribe para buscar entre {{ productos.length }} productos
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select formControlName="tipo">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="entrada">Entrada</mat-option>
+            <mat-option value="salida">Salida</mat-option>
+            <mat-option value="ajuste">Ajuste</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Desde</mat-label>
+          <input matInput type="date" formControlName="fecha_desde" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hasta</mat-label>
+          <input matInput type="date" formControlName="fecha_hasta" />
+        </mat-form-field>
+
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>search</mat-icon> Aplicar
+          </button>
+          <button mat-stroked-button type="button" (click)="refresh()">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="table-wrap mat-elevation-z2" *ngIf="!loading && hasRows">
+    <table mat-table [dataSource]="dataSource" [trackBy]="trackByFn">
+
+      <ng-container matColumnDef="fecha_movimiento">
+        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <td mat-cell *matCellDef="let row">
+          <div class="fecha-cell">
+            <span class="fecha-day">{{ fechaDay(row) }}</span>
+            <span class="fecha-time">{{ fechaTime(row) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="producto">
+        <th mat-header-cell *matHeaderCellDef>Producto</th>
+        <td mat-cell *matCellDef="let row">
+          <div class="product-cell">
+            <span class="product-code">{{ productCode(row) }}</span>
+            <span class="product-name">{{ productName(row) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let row">{{ clienteLabel(row) }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge-tipo" [class]="row.tipo">
+            <span class="badge-dot"></span>
+            {{ row.tipo }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef>Cant.</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="qty-cell" [class]="row.tipo">
+            {{ row.tipo === 'salida' ? '-' : '+' }}{{ row.cantidad }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>Stock</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="stock-arrow" *ngIf="row.stock_anterior != null && row.stock_posterior != null; else noStock">
+            <span class="stock-val">{{ row.stock_anterior }}</span>
+            <span class="stock-sep">→</span>
+            <span class="stock-val">{{ row.stock_posterior }}</span>
+          </span>
+          <ng-template #noStock><span style="color:var(--color-text-3)">—</span></ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="motivo">
+        <th mat-header-cell *matHeaderCellDef>Motivo</th>
+        <td mat-cell *matCellDef="let row">{{ row.motivo || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="usuario_username">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let row">{{ row.usuario_username }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" [class]="rowClass(row)"></tr>
+    </table>
+
+    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 50, 100]" showFirstLastButtons></mat-paginator>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !hasRows">
+    <mat-icon>fact_check</mat-icon>
+    <h2>Sin resultados</h2>
+    <p>No hay movimientos para los filtros aplicados. Prueba con otro rango de fechas o producto.</p>
+  </div>
+
+</div>
+

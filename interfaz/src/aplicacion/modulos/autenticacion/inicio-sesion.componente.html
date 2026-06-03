@@ -1,0 +1,168 @@
+<!-- Autenticacion -->
+<div class="login-root">
+
+  <div class="login-body">
+
+    <section class="brand-panel" aria-hidden="true">
+
+      <div class="bp-grid"></div>
+
+      <div class="bp-orb bp-orb--1"></div>
+      <div class="bp-orb bp-orb--2"></div>
+      <div class="bp-orb bp-orb--3"></div>
+
+      <div class="bp-particles">
+        <span class="p"></span><span class="p"></span><span class="p"></span>
+        <span class="p"></span><span class="p"></span><span class="p"></span>
+        <span class="p"></span><span class="p"></span><span class="p"></span>
+      </div>
+
+      <div class="bp-center">
+
+        <div class="bp-logo-wrap">
+          <div class="bp-logo-halo"></div>
+          <div class="bp-logo-ring"></div>
+          <img src="assets/LOGO -Photoroom.png" alt="El Mundo del Carguero" class="bp-logo" />
+        </div>
+        <p class="bp-tagline">Sistema de Inventario</p>
+
+
+
+      </div></section><section class="login-panel" aria-label="Formulario de inicio de sesión">
+
+      <div class="lp-ambient"></div>
+
+      <div class="login-card">
+
+        <div class="card-top-line"></div>
+
+        <div class="lock-badge">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+            <rect x="5" y="11" width="14" height="10" rx="2" fill="rgba(200,16,46,0.2)" stroke="rgba(200,16,46,0.9)" stroke-width="1.5"/>
+            <path d="M8 11V7C8 4.79 9.79 3 12 3C14.21 3 16 4.79 16 7V11" stroke="rgba(200,16,46,0.9)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1.5" fill="rgba(200,16,46,1)"/>
+          </svg>
+        </div>
+
+        <div class="card-head">
+          <h1 class="card-head__title">Bienvenido de nuevo</h1>
+          <p class="card-head__sub">Inicia sesión para continuar</p>
+        </div>
+
+        <div class="login-error-alert" *ngIf="loginError" role="alert" aria-live="assertive">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="error-ico" aria-hidden="true">
+            <circle cx="10" cy="10" r="9" stroke="#fc5c7d" stroke-width="1.5"/>
+            <path d="M10 6V10" stroke="#fc5c7d" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="10" cy="13.5" r="1" fill="#fc5c7d"/>
+          </svg>
+          <span>{{ loginError }}</span>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" id="login-form" novalidate>
+
+          <div class="field-group">
+            <label class="field-label" for="login-username">Usuario</label>
+            <div class="field-wrap" [class.has-error]="form.controls.username.invalid && form.controls.username.touched">
+              <svg class="field-ico" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true">
+                <circle cx="10" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M3 17C3 13.69 6.13 11 10 11C13.87 11 17 13.69 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <input
+                id="login-username"
+                class="field-input"
+                type="text"
+                formControlName="username"
+                placeholder="Tu nombre de usuario"
+                autocomplete="username"
+              />
+            </div>
+            <span class="field-error" *ngIf="form.controls.username.touched && form.controls.username.hasError('required')">El usuario es obligatorio</span>
+            <span class="field-error" *ngIf="form.controls.username.touched && form.controls.username.hasError('minlength')">Mínimo 3 caracteres</span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="login-password">Contraseña</label>
+            <div class="field-wrap" [class.has-error]="form.controls.password.invalid && form.controls.password.touched">
+              <svg class="field-ico" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true">
+                <rect x="4" y="9" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M7 9V6.5C7 4.57 8.57 3 10.5 3C12.43 3 14 4.57 14 6.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="10.5" cy="13.5" r="1.2" fill="currentColor"/>
+              </svg>
+              <input
+                id="login-password"
+                class="field-input"
+                [type]="hidePassword ? 'password' : 'text'"
+                formControlName="password"
+                placeholder="Tu contraseña"
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                class="field-toggle"
+                (click)="hidePassword = !hidePassword"
+                [attr.aria-label]="hidePassword ? 'Mostrar contraseña' : 'Ocultar contraseña'"
+                [attr.aria-pressed]="!hidePassword"
+              >
+                <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+            </div>
+            <span class="field-error" *ngIf="form.controls.password.touched && form.controls.password.hasError('required')">La contraseña es obligatoria</span>
+            <span class="field-error" *ngIf="form.controls.password.touched && form.controls.password.hasError('minlength')">Mínimo 6 caracteres</span>
+          </div>
+
+          <div class="extras-row">
+            <label class="remember-label">
+              <input
+                type="checkbox"
+                class="remember-check"
+                [checked]="rememberMe"
+                (change)="rememberMe = $any($event.target).checked"
+              />
+              <span>Recordarme</span>
+            </label>
+            <button type="button" class="forgot-link" (click)="showForgotModal = true">
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            id="login-submit-btn"
+            class="login-btn"
+            [disabled]="loading || form.invalid"
+          >
+            <span class="btn-shimmer" *ngIf="loading"></span>
+            <mat-spinner *ngIf="loading" diameter="20" class="btn-spinner"></mat-spinner>
+            <span *ngIf="!loading" class="btn-text">Iniciar Sesión</span>
+            <svg *ngIf="!loading" class="btn-arrow" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true">
+              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+        </form>
+
+        <p class="card-footer">
+          ¿No tienes acceso?&nbsp;
+          <button type="button" class="contact-link" (click)="showForgotModal = true">Contacta al administrador</button>
+        </p>
+
+      </div></section></div></div><div class="modal-overlay" *ngIf="showForgotModal"
+  role="dialog" aria-modal="true" aria-labelledby="modal-title"
+  (click)="closeForgotModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <mat-icon>support_agent</mat-icon>
+    </div>
+    <h2 id="modal-title" class="modal-title">¿Olvidaste tu contraseña?</h2>
+    <p class="modal-body">
+      El acceso es gestionado por el <strong>administrador</strong>.<br>
+      Comunícate con él para recuperar tu contraseña.
+    </p>
+    <div class="modal-contact">
+      <mat-icon>email</mat-icon>
+      <span>admin&#64;carguero.com</span>
+    </div>
+    <button class="modal-close-btn" (click)="closeForgotModal()">Entendido</button>
+  </div>
+</div>
+

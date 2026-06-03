@@ -1,0 +1,127 @@
+<!-- Plantilla -->
+<div class="app-frame">
+  <header class="top-header">
+    <a class="header-logo-wrap" routerLink="/tablero">
+      <div class="header-logo-icon">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+      <div>
+        <div class="header-brand">InvenTrack</div>
+        <div class="header-brand-sub">Sistema de Inventario</div>
+      </div>
+    </a>
+
+    <span class="spacer"></span>
+
+    <div class="header-right">
+      <button type="button" class="header-notification-btn" title="Alertas">
+        <mat-icon>notifications_none</mat-icon>
+        <span class="header-badge"></span>
+      </button>
+    </div>
+  </header>
+
+  <mat-menu #userMenu="matMenu" xPosition="before">
+    <div style="padding: 12px 16px 8px; border-bottom: 1px solid #f1f5f9;">
+      <div style="font-weight:600; color:#0f172a; font-size:0.9rem;">{{ displayName }}</div>
+      <div style="font-size:0.78rem; color:#64748b;" *ngIf="displayEmail">{{ displayEmail }}</div>
+    </div>
+    <button mat-menu-item type="button" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Cerrar sesión
+    </button>
+  </mat-menu>
+
+  <mat-sidenav-container class="shell-container" [hasBackdrop]="false">
+    <mat-sidenav
+      #drawer
+      mode="side"
+      [opened]="opened"
+      class="sidenav"
+      [fixedInViewport]="false"
+    >
+      <div class="nav-user">
+        <button type="button" class="nav-user-trigger" [matMenuTriggerFor]="sideUserMenu">
+          <div class="nav-user-inner">
+            <div class="avatar-wrap">
+              <mat-icon class="avatar-icon">person</mat-icon>
+            </div>
+            <div class="nav-user-meta">
+              <div class="nav-user-name">{{ displayName }}</div>
+              <div class="nav-user-email" *ngIf="displayEmail">{{ displayEmail }}</div>
+            </div>
+            <mat-icon class="chevron">expand_more</mat-icon>
+          </div>
+        </button>
+      </div>
+
+      <mat-menu #sideUserMenu="matMenu" xPosition="after">
+        <button mat-menu-item type="button" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          Cerrar sesión
+        </button>
+      </mat-menu>
+
+      <div class="nav-scroll">
+        <div class="nav-section-label">Principal</div>
+
+        <mat-nav-list class="nav-list-root">
+          <a mat-list-item routerLink="/tablero" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <mat-icon matListItemIcon>dashboard</mat-icon>
+            <span matListItemTitle>Dashboard</span>
+          </a>
+        </mat-nav-list>
+
+        <div class="nav-section-label">Acciones rápidas</div>
+
+        <mat-nav-list class="nav-list-root">
+          <a mat-list-item routerLink="/productos" routerLinkActive="active">
+            <mat-icon matListItemIcon>inventory_2</mat-icon>
+            <span matListItemTitle>Inventario</span>
+          </a>
+          <a mat-list-item routerLink="/movimientos" routerLinkActive="active">
+            <mat-icon matListItemIcon>swap_horiz</mat-icon>
+            <span matListItemTitle>Movimientos</span>
+          </a>
+          <a mat-list-item routerLink="/kardex" routerLinkActive="active">
+            <mat-icon matListItemIcon>receipt_long</mat-icon>
+            <span matListItemTitle>Kardex</span>
+          </a>
+          <a mat-list-item routerLink="/clientes" routerLinkActive="active">
+            <mat-icon matListItemIcon>people</mat-icon>
+            <span matListItemTitle>Clientes</span>
+          </a>
+          <a mat-list-item routerLink="/proveedores" routerLinkActive="active">
+            <mat-icon matListItemIcon>local_shipping</mat-icon>
+            <span matListItemTitle>Proveedores</span>
+          </a>
+          <a mat-list-item routerLink="/categorias" routerLinkActive="active">
+            <mat-icon matListItemIcon>category</mat-icon>
+            <span matListItemTitle>Categorías</span>
+          </a>
+        </mat-nav-list>
+
+        <div class="nav-section-label" *ngIf="isAdmin">Administración</div>
+
+        <mat-nav-list class="nav-list-root" *ngIf="isAdmin">
+          <a mat-list-item routerLink="/usuarios" routerLinkActive="active">
+            <mat-icon matListItemIcon>manage_accounts</mat-icon>
+            <span matListItemTitle>Usuarios</span>
+          </a>
+        </mat-nav-list>
+      </div>
+
+      <div class="nav-footer">
+        <div class="nav-footer-version">v1.0.0 · Inventario Pro</div>
+      </div>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="main-area">
+      <main class="page-content">
+        <router-outlet></router-outlet>
+      </main>
+      <app-inventory-chat></app-inventory-chat>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
+

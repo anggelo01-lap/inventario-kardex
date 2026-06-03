@@ -1,0 +1,65 @@
+<!-- Categorias -->
+<div class="inventory-page">
+
+  <section class="inventory-toolbar">
+    <div class="toolbar-copy">
+      <p class="eyebrow">Gestión</p>
+      <h1>Categorías</h1>
+      <p class="subtitle">Gestiona las categorías para organizar el inventario.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-raised-button color="primary" type="button" (click)="nueva()" class="btn-nuevo">
+        <mat-icon>create_new_folder</mat-icon> Nueva categoría
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <div class="list-header" *ngIf="rows.length">
+      <span class="list-count">{{ rows.length }} categorías registradas</span>
+    </div>
+
+    <div class="category-grid" *ngIf="rows.length; else emptyState">
+      <div class="category-card" *ngFor="let row of rows">
+
+        <div class="category-icon">
+          <mat-icon>category</mat-icon>
+        </div>
+
+        <div class="category-info">
+          <span class="category-name">{{ row.nombre }}</span>
+          <span class="category-desc">{{ row.descripcion || 'Sin descripción' }}</span>
+        </div>
+
+        <div class="entity-actions">
+          <button class="action-btn edit" type="button" (click)="editar(row)" aria-label="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button class="action-btn delete" type="button" (click)="eliminar(row)" aria-label="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>category</mat-icon>
+        <h2>No hay categorías</h2>
+        <p>Crea categorías para organizar tu inventario de repuestos.</p>
+        <button mat-raised-button color="primary" (click)="nueva()">
+          <mat-icon>create_new_folder</mat-icon> Crear primera categoría
+        </button>
+      </div>
+    </ng-template>
+
+  </div>
+
+</div>
+

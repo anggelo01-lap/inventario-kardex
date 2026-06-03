@@ -1,0 +1,75 @@
+<!-- Clientes -->
+<div class="inventory-page">
+
+  <section class="inventory-toolbar">
+    <div class="toolbar-copy">
+      <p class="eyebrow">Gestión</p>
+      <h1>Clientes</h1>
+      <p class="subtitle">Clientes disponibles para asociar a salidas y consultas.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-raised-button color="primary" type="button" (click)="nuevo()" class="btn-nuevo">
+        <mat-icon>person_add</mat-icon> Nuevo cliente
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <div class="list-header" *ngIf="rows.length">
+      <span class="list-count">{{ rows.length }} clientes registrados</span>
+    </div>
+
+    <div class="entity-list" *ngIf="rows.length; else emptyState">
+      <div class="entity-card" *ngFor="let row of rows">
+
+        <div class="entity-avatar">
+          {{ row.nombre.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="entity-info">
+          <span class="entity-name">{{ row.nombre }}</span>
+          <div class="entity-meta">
+            <span *ngIf="row.documento" class="meta-chip">
+              <mat-icon>badge</mat-icon>{{ row.documento }}
+            </span>
+            <span *ngIf="row.telefono" class="meta-chip">
+              <mat-icon>phone</mat-icon>{{ row.telefono }}
+            </span>
+            <span *ngIf="row.email" class="meta-chip">
+              <mat-icon>email</mat-icon>{{ row.email }}
+            </span>
+          </div>
+        </div>
+
+        <div class="entity-actions">
+          <button class="action-btn edit" type="button" (click)="editar(row)" aria-label="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button class="action-btn delete" type="button" (click)="eliminar(row)" aria-label="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>groups</mat-icon>
+        <h2>No hay clientes registrados</h2>
+        <p>Crea clientes para asociarlos a salidas o seguimiento comercial.</p>
+        <button mat-raised-button color="primary" (click)="nuevo()">
+          <mat-icon>person_add</mat-icon> Crear primer cliente
+        </button>
+      </div>
+    </ng-template>
+
+  </div>
+
+</div>
+

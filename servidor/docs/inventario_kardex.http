@@ -1,0 +1,140 @@
+### Variables
+@baseUrl = http://127.0.0.1:8000
+@username = angel
+@password = 123456
+
+### 1) Login (guardar token manualmente)
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Copia el access_token de la respuesta y pégalo aquí:
+@token = REEMPLAZAR_ACCESS_TOKEN
+
+### 2) Health
+GET {{baseUrl}}/api/v1/health
+Authorization: Bearer {{token}}
+
+### 3) Crear categoría
+POST {{baseUrl}}/api/v1/categorias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Insumos Taller",
+  "descripcion": "Insumos consumibles de operación"
+}
+
+### 4) Listar categorías
+GET {{baseUrl}}/api/v1/categorias
+Authorization: Bearer {{token}}
+
+### 5) Crear producto (ajusta categoria_id)
+POST {{baseUrl}}/api/v1/productos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "codigo": "INS-100",
+  "nombre": "Lubricante Cadena",
+  "descripcion": "Spray lubricante para cadena",
+  "categoria_id": 1,
+  "tipo": "insumo",
+  "precio": 35.90,
+  "stock_minimo": 5,
+  "stock_inicial": 20
+}
+
+### 6) Listar productos
+GET {{baseUrl}}/api/v1/productos
+Authorization: Bearer {{token}}
+
+### 7) Actualizar producto (ajusta id/categoria_id)
+PUT {{baseUrl}}/api/v1/productos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Lubricante Cadena Pro",
+  "categoria_id": 1,
+  "tipo": "insumo",
+  "precio": 39.90,
+  "stock_minimo": 8
+}
+
+### 8) Entrada de Kardex (ajusta producto_id)
+POST {{baseUrl}}/api/v1/movimientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "producto_id": 1,
+  "tipo": "entrada",
+  "cantidad": 10,
+  "costo_unitario": 30.00,
+  "referencia": "COMPRA-2026-001",
+  "observacion": "Ingreso por compra proveedor"
+}
+
+### 9) Salida de Kardex (ajusta producto_id)
+POST {{baseUrl}}/api/v1/movimientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "producto_id": 1,
+  "tipo": "salida",
+  "cantidad": 3,
+  "costo_unitario": 30.00,
+  "referencia": "VENTA-2026-001",
+  "observacion": "Venta mostrador"
+}
+
+### 10) Ajuste de Kardex (ajusta producto_id)
+POST {{baseUrl}}/api/v1/movimientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "producto_id": 1,
+  "tipo": "ajuste",
+  "cantidad": 18,
+  "referencia": "AJUSTE-2026-001",
+  "observacion": "Ajuste por inventario físico"
+}
+
+### 11) Historial Kardex por producto
+GET {{baseUrl}}/api/v1/movimientos?producto_id=1&limit=50
+Authorization: Bearer {{token}}
+
+### 12) Probar validación: stock insuficiente (debe devolver 400)
+POST {{baseUrl}}/api/v1/movimientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "producto_id": 1,
+  "tipo": "salida",
+  "cantidad": 999999,
+  "referencia": "TEST-ERROR-STOCK"
+}
+
+### 13) Probar validación: tipo inválido (debe devolver 400)
+POST {{baseUrl}}/api/v1/movimientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "producto_id": 1,
+  "tipo": "transferencia",
+  "cantidad": 2,
+  "referencia": "TEST-ERROR-TIPO"
+}
+
+### 14) Eliminar producto sin movimientos (ajusta id)
+DELETE {{baseUrl}}/api/v1/productos/999
+Authorization: Bearer {{token}}

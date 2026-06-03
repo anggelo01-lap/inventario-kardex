@@ -1,0 +1,75 @@
+<!-- Proveedores -->
+<div class="inventory-page">
+
+  <section class="inventory-toolbar">
+    <div class="toolbar-copy">
+      <p class="eyebrow">Gestión</p>
+      <h1>Proveedores</h1>
+      <p class="subtitle">Administra los proveedores del catálogo de repuestos.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-raised-button color="primary" type="button" (click)="nuevo()" class="btn-nuevo">
+        <mat-icon>add_business</mat-icon> Nuevo proveedor
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <div class="list-header" *ngIf="rows.length">
+      <span class="list-count">{{ rows.length }} proveedores registrados</span>
+    </div>
+
+    <div class="entity-list" *ngIf="rows.length; else emptyState">
+      <div class="entity-card" *ngFor="let row of rows">
+
+        <div class="entity-avatar proveedor">
+          {{ row.nombre.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="entity-info">
+          <span class="entity-name">{{ row.nombre }}</span>
+          <div class="entity-meta">
+            <span *ngIf="row.contacto" class="meta-chip">
+              <mat-icon>person</mat-icon>{{ row.contacto }}
+            </span>
+            <span *ngIf="row.telefono" class="meta-chip">
+              <mat-icon>phone</mat-icon>{{ row.telefono }}
+            </span>
+            <span *ngIf="row.email" class="meta-chip">
+              <mat-icon>email</mat-icon>{{ row.email }}
+            </span>
+          </div>
+        </div>
+
+        <div class="entity-actions">
+          <button class="action-btn edit" type="button" (click)="editar(row)" aria-label="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button class="action-btn delete" type="button" (click)="eliminar(row)" aria-label="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>local_shipping</mat-icon>
+        <h2>No hay proveedores registrados</h2>
+        <p>Crea proveedores para asociarlos luego a tus productos.</p>
+        <button mat-raised-button color="primary" (click)="nuevo()">
+          <mat-icon>add_business</mat-icon> Crear primer proveedor
+        </button>
+      </div>
+    </ng-template>
+
+  </div>
+
+</div>
+

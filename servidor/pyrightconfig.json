@@ -1,0 +1,11 @@
+{
+  "pythonVersion": "3.11",
+  "pythonPlatform": "Windows",
+  "pythonPath": "C:/Users/Admin/AppData/Local/Programs/Python/Python311/python.exe",
+  "venvPath": "C:/Users/Admin/AppData/Local/Programs/Python/Python311",
+  "include": ["app", "alembic", "tests"],
+  "exclude": ["**/__pycache__", "**/*.pyc", "subidas"],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none"
+}

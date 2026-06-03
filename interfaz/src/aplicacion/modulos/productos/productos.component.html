@@ -1,0 +1,315 @@
+<!-- Productos / Inventario -->
+<div class="inventory-page">
+
+  <section class="inventory-toolbar">
+    <div class="toolbar-copy">
+      <h1>Inventario</h1>
+      <p>Gestiona, filtra y actualiza tus productos en tiempo real.</p>
+    </div>
+
+    <div class="toolbar-actions">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>Buscar producto</mat-label>
+        <input matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <div class="button-row">
+        <button *ngIf="isAdmin" mat-stroked-button type="button" [disabled]="exporting" (click)="exportarCatalogo()">
+          <mat-icon>download</mat-icon>
+          Exportar Excel
+        </button>
+        <button mat-raised-button color="primary" type="button" (click)="nuevo()">
+          <mat-icon>add</mat-icon>
+          Nuevo producto
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-bar stagger" *ngIf="!loading">
+    <div class="stat-chip animate-fade-up">
+      <div class="stat-chip__icon">
+        <mat-icon>widgets</mat-icon>
+      </div>
+      <div class="stat-chip__copy">
+        <span class="stat-chip__value">{{ totalProductos }}</span>
+        <span class="stat-chip__label">Total productos</span>
+      </div>
+    </div>
+
+    <div class="stat-chip animate-fade-up">
+      <div class="stat-chip__icon stat-chip__icon--warn">
+        <mat-icon>warning_amber</mat-icon>
+      </div>
+      <div class="stat-chip__copy">
+        <span class="stat-chip__value">{{ productosBajoStock }}</span>
+        <span class="stat-chip__label">Bajo stock</span>
+      </div>
+    </div>
+
+    <div class="stat-chip animate-fade-up">
+      <div class="stat-chip__icon stat-chip__icon--danger">
+        <mat-icon>remove_shopping_cart</mat-icon>
+      </div>
+      <div class="stat-chip__copy">
+        <span class="stat-chip__value">{{ productosSinStock }}</span>
+        <span class="stat-chip__label">Sin stock</span>
+      </div>
+    </div>
+
+    <div class="stat-chip animate-fade-up">
+      <div class="stat-chip__icon">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="stat-chip__copy">
+        <span class="stat-chip__value">{{ formatInventoryValue(valorInventario) }}</span>
+        <span class="stat-chip__label">Valor inventario</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="filters-bar">
+    <div class="estado-pills">
+      <button mat-button type="button" [class.active]="estadoFilter === 'all'" (click)="setEstadoFilter('all')">Todo</button>
+      <button mat-button type="button" [class.active]="estadoFilter === 'ok'"  (click)="setEstadoFilter('ok')">Saludable</button>
+      <button mat-button type="button" [class.active]="estadoFilter === 'low'" (click)="setEstadoFilter('low')">Bajo stock</button>
+      <button mat-button type="button" [class.active]="estadoFilter === 'out'" (click)="setEstadoFilter('out')">Sin stock</button>
+    </div>
+
+    <div class="categoria-pills" *ngIf="categoriasDisponibles.length">
+      <button mat-button type="button" [class.active]="categoriaFilter === 'all'" (click)="categoriaFilter = 'all'; applyFilters()">
+        Todas
+      </button>
+      <button 
+        mat-button 
+        type="button" 
+        *ngFor="let item of categoriasDisponibles.slice(0, 7)" 
+        [class.active]="categoriaFilter === item" 
+        (click)="categoriaFilter = item; applyFilters()"
+      >
+        {{ item }}
+      </button>
+    </div>
+
+    <div class="filter-actions">
+      <button mat-stroked-button type="button" [class.active]="vista === 'grid'" (click)="setVista('grid')">
+        <mat-icon>grid_view</mat-icon>
+      </button>
+      <button mat-stroked-button type="button" [class.active]="vista === 'dense'" (click)="setVista('dense')">
+        <mat-icon>view_compact</mat-icon>
+      </button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="inventory-layout" *ngIf="!loading">
+    <section class="catalog-column">
+      <div class="catalog-grid" [class.compact]="vista === 'dense'" *ngIf="hasRows; else emptyState">
+        <article
+          class="product-card"
+          *ngFor="let row of productosPagina"
+          [class.selected]="productoSeleccionado?.id === row.id"
+          [class.low]="stockStatus(row) === 'low'"
+          [class.out]="stockStatus(row) === 'out'"
+          (click)="selectProduct(row)"
+        >
+          <div class="card-image-wrap">
+            <img *ngIf="row.image_url; else noImage" class="card-image" [src]="imageSrc(row)" [alt]="imageLabel(row)" />
+            <ng-template #noImage>
+              <div class="card-image placeholder">
+                <mat-icon>inventory_2</mat-icon>
+              </div>
+            </ng-template>
+
+            <div class="type-pill">{{ tipoLabel(row) }}</div>
+            <div class="status-pill" [class.low]="stockStatus(row) === 'low'" [class.out]="stockStatus(row) === 'out'">
+              <mat-icon>{{ stockStatusIcon(row) }}</mat-icon>
+              <span>{{ stockStatusLabel(row) }}</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="title-row">
+              <span class="product-code">{{ row.codigo }}</span>
+              <h3>{{ row.nombre }}</h3>
+            </div>
+
+            <div class="compact-meta">
+              <div>
+                <span class="meta-label">Categoría</span>
+                <strong>{{ row.categoria?.nombre || 'Sin categoría' }}</strong>
+              </div>
+              <div>
+                <span class="meta-label">Stock</span>
+                <strong>{{ row.stock_actual }}</strong>
+              </div>
+            </div>
+
+            <div class="card-foot">
+              <div>
+                <span class="meta-label">Precio</span>
+                <strong>PEN {{ row.precio | number : '1.2-2' }}</strong>
+              </div>
+              <div class="mini-stock">
+                <span class="meta-label">Min. {{ row.stock_minimo }}</span>
+                <div class="stock-meter">
+                  <span class="stock-meter-fill" [style.width.%]="stockProgress(row)"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button mat-button type="button" (click)="registrarMovimiento(row, 'salida'); $event.stopPropagation()">
+                Salida
+              </button>
+              <button mat-button type="button" (click)="selectProduct(row); $event.stopPropagation()">
+                Ver
+              </button>
+              <button mat-button type="button" (click)="editar(row); $event.stopPropagation()">
+                Editar
+              </button>
+              <button
+                *ngIf="isAdmin"
+                mat-icon-button
+                type="button"
+                color="warn"
+                (click)="eliminar(row); $event.stopPropagation()"
+                aria-label="Eliminar producto"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="catalog-paginator" *ngIf="hasRows">
+        <mat-paginator
+          [length]="productosFiltrados.length"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <mat-icon>inventory</mat-icon>
+          <h2>No hay productos</h2>
+          <p>Prueba con otros filtros o crea un producto nuevo para comenzar.</p>
+        </div>
+      </ng-template>
+    </section>
+
+    <aside class="detail-column" *ngIf="productoSeleccionado as seleccionado">
+      <div class="detail-panel">
+        <div class="detail-media">
+          <img *ngIf="seleccionado.image_url; else detailNoImage" [src]="imageSrc(seleccionado)" [alt]="imageLabel(seleccionado)" />
+          <ng-template #detailNoImage>
+            <div class="detail-placeholder">
+              <mat-icon>photo_camera</mat-icon>
+              <span>Sin imagen</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="detail-head">
+          <div>
+            <span class="detail-code">{{ seleccionado.codigo }}</span>
+            <h2>{{ seleccionado.nombre }}</h2>
+            <p>{{ seleccionado.descripcion || 'Ficha resumida del producto seleccionado.' }}</p>
+          </div>
+          <div class="detail-badge" [class.low]="stockStatus(seleccionado) === 'low'" [class.out]="stockStatus(seleccionado) === 'out'">
+            {{ stockStatusLabel(seleccionado) }}
+          </div>
+        </div>
+
+        <div class="detail-stats detail-stats-primary">
+          <article>
+            <span>Stock</span>
+            <strong>{{ seleccionado.stock_actual }}</strong>
+          </article>
+          <article>
+            <span>Precio</span>
+            <strong>PEN {{ seleccionado.precio | number : '1.2-2' }}</strong>
+          </article>
+        </div>
+
+        <div class="detail-stats">
+          <article>
+            <span>Mínimo</span>
+            <strong>{{ seleccionado.stock_minimo }}</strong>
+          </article>
+          <article>
+            <span>Proveedor</span>
+            <strong>{{ seleccionado.proveedor?.nombre || '—' }}</strong>
+          </article>
+        </div>
+
+        <div class="detail-meta">
+          <div>
+            <span>Categoría</span>
+            <strong>{{ seleccionado.categoria?.nombre || '—' }}</strong>
+          </div>
+          <div>
+            <span>Tipo</span>
+            <strong>{{ tipoLabel(seleccionado) }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button mat-raised-button color="primary" type="button" (click)="registrarMovimiento(seleccionado, 'entrada')">
+            <mat-icon>south_west</mat-icon> Entrada
+          </button>
+          <button mat-raised-button color="accent" type="button" (click)="registrarMovimiento(seleccionado, 'salida')">
+            <mat-icon>north_east</mat-icon> Salida
+          </button>
+          <button mat-stroked-button type="button" (click)="verKardex(seleccionado)">Ver Kardex</button>
+          <button mat-stroked-button type="button" (click)="editar(seleccionado)">Editar ficha</button>
+        </div>
+
+        <div class="detail-history">
+          <div class="detail-history-head">
+            <div>
+              <h3>Actividad reciente</h3>
+              <p>Últimos movimientos registrados</p>
+            </div>
+            <button mat-button type="button" (click)="verKardex(seleccionado)">Ver historial</button>
+          </div>
+
+          <div *ngIf="detailLoading" class="detail-loading">
+            <mat-spinner diameter="28"></mat-spinner>
+          </div>
+
+          <div class="movement-list" *ngIf="!detailLoading && movimientosDetalle.length > 0">
+            <article class="movement-item" *ngFor="let row of movimientosDetalle">
+              <div class="movement-icon" [class.out]="row.tipo === 'salida'" [class.adjust]="row.tipo === 'ajuste'">
+                <mat-icon>
+                  {{ row.tipo === 'entrada' ? 'south_west' : row.tipo === 'salida' ? 'north_east' : 'sync_alt' }}
+                </mat-icon>
+              </div>
+              <div class="movement-copy">
+                <strong>{{ recentMovementTitle(row) }}</strong>
+                <span>{{ row.fecha_movimiento | date : 'short' }} · {{ recentMovementStock(row) }}</span>
+                <small>{{ row.usuario_username }}{{ row.motivo ? ' · ' + row.motivo : '' }}</small>
+              </div>
+            </article>
+          </div>
+
+          <div class="detail-empty" *ngIf="!detailLoading && movimientosDetalle.length === 0">
+            <mat-icon>history_toggle_off</mat-icon>
+            <p>Sin movimientos registrados aún.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+

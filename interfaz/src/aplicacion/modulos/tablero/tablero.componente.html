@@ -1,0 +1,267 @@
+<!-- Tablero -->
+<div class="dashboard-shell">
+  <div class="dashboard-head">
+    <div class="dashboard-copy">
+      <p class="eyebrow">Panel operativo</p>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Estado del inventario, movimientos y alertas de stock en tiempo real.</p>
+    </div>
+
+    <div class="filter-bar">
+      <button
+        type="button"
+        class="filter-pill"
+        *ngFor="let option of periodOptions"
+        [class.is-active]="periodo === option.value"
+        (click)="setPeriodo(option.value)"
+      >
+        {{ option.label }}
+      </button>
+      <button type="button" class="filter-pill" (click)="toggleAgrupacion()">
+        <span>{{ agrupacionLabel }}</span>
+      </button>
+      <button type="button" class="filter-pill filter-pill--ghost" (click)="resetFiltros()">
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div class="quick-actions stagger">
+    <button class="quick-action animate-fade-up" routerLink="/inventario">
+      <mat-icon>inventory_2</mat-icon>
+      <span>Inventario</span>
+    </button>
+    <button class="quick-action animate-fade-up" routerLink="/movimientos">
+      <mat-icon>swap_horiz</mat-icon>
+      <span>Movimientos</span>
+    </button>
+    <button class="quick-action animate-fade-up" routerLink="/kardex">
+      <mat-icon>receipt_long</mat-icon>
+      <span>Kardex</span>
+    </button>
+    <button class="quick-action animate-fade-up" routerLink="/clientes">
+      <mat-icon>people</mat-icon>
+      <span>Clientes</span>
+    </button>
+    <button class="quick-action animate-fade-up" routerLink="/proveedores">
+      <mat-icon>local_shipping</mat-icon>
+      <span>Proveedores</span>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando métricas del inventario...</p>
+  </div>
+
+  <div *ngIf="error" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <div class="dashboard-layout" *ngIf="!loading && resumen">
+    <div class="main-column">
+
+      <div class="metrics-row stagger">
+
+        <article class="metric-card animate-fade-up">
+          <div class="metric-card__header">
+            <span>Total de productos</span>
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <strong>{{ totalProductosInventario }}</strong>
+          <p class="is-neutral">
+            Valor total: {{ formatCurrency(valorTotalInventario) }}
+          </p>
+        </article>
+
+        <article class="metric-card animate-fade-up">
+          <div class="metric-card__header">
+            <span>Entradas del período</span>
+            <mat-icon>south_west</mat-icon>
+          </div>
+          <strong>{{ formatCompact(resumen.entradas_vs_salidas.entradas) }}</strong>
+          <p class="is-neutral">Unidades ingresadas al stock</p>
+        </article>
+
+        <article class="metric-card animate-fade-up" [class.metric-card--warn]="resumen.productos_bajo_stock > 0">
+          <div class="metric-card__header">
+            <span>Bajo stock</span>
+            <mat-icon>warning_amber</mat-icon>
+          </div>
+          <strong>{{ resumen.productos_bajo_stock }}</strong>
+          <p [class]="resumen.productos_bajo_stock > 0 ? 'is-down' : 'is-neutral'">
+            {{ resumen.productos_bajo_stock > 0 ? 'Requieren reposición' : 'Todo en orden ✓' }}
+          </p>
+        </article>
+
+      </div>
+
+      <section class="panel-card chart-card animate-fade-up">
+        <div class="panel-card__head">
+          <div>
+            <h2>Salidas por período</h2>
+            <p>Unidades salidas del inventario · {{ periodLabel }}</p>
+          </div>
+          <div class="summary-pills">
+            <span class="summary-pill">{{ resumen.total_productos }} productos</span>
+            <span class="summary-pill">{{ formatCompact(resumen.stock_total) }} en stock</span>
+            <span class="summary-pill">
+              ↓ {{ resumen.entradas_vs_salidas.entradas }} entradas
+            </span>
+            <span class="summary-pill summary-pill--warn">
+              ↑ {{ resumen.entradas_vs_salidas.salidas }} salidas
+            </span>
+            <span class="summary-pill">{{ resumen.movimientos_hoy }} mov. hoy</span>
+          </div>
+        </div>
+
+        <div class="chart-wrap" *ngIf="chartHasData; else noSalesChart">
+          <canvas baseChart [data]="salesChartData" [options]="salesChartOptions" [type]="'line'"></canvas>
+        </div>
+
+        <ng-template #noSalesChart>
+          <div class="empty-chart">
+            <mat-icon>query_stats</mat-icon>
+            <h3>Sin movimientos en este período</h3>
+            <p>Cuando existan movimientos de salida, el gráfico aparecerá aquí.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <div class="bottom-grid">
+        <section class="panel-card animate-fade-up">
+          <div class="panel-card__head">
+            <div>
+              <h2>Movimientos recientes</h2>
+              <p>Actividad real del Kardex · {{ periodLabel }}</p>
+            </div>
+          </div>
+
+          <div class="table-shell" *ngIf="movimientos.length; else noMovements">
+            <div class="table-head">
+              <span>Fecha</span>
+              <span>Producto</span>
+              <span>Tipo</span>
+              <span>Usuario</span>
+              <span>Monto</span>
+            </div>
+            <div class="table-row" *ngFor="let mov of movimientos; trackBy: trackByMovimiento">
+              <span>{{ mov.fecha_movimiento | date : 'dd/MM/yy HH:mm' }}</span>
+              <span class="table-product">
+                <strong>{{ mov.producto_codigo }}</strong>
+                <small>{{ mov.producto_nombre }}</small>
+              </span>
+              <span [class]="movementTypeClass(mov.tipo)">{{ movementTypeLabel(mov.tipo) }}</span>
+              <span>{{ mov.usuario_username }}</span>
+              <span>{{ mov.monto_estimado != null ? formatCurrency(mov.monto_estimado) : '—' }}</span>
+            </div>
+          </div>
+
+          <ng-template #noMovements>
+            <div class="empty-inline">
+              <mat-icon>history</mat-icon>
+              <p>No hay movimientos para este periodo.</p>
+            </div>
+          </ng-template>
+        </section>
+
+        <section class="panel-card animate-fade-up">
+          <div class="panel-card__head">
+            <div>
+              <h2>Top 10 más movidos</h2>
+              <p>Productos con mayor cantidad de salidas</p>
+            </div>
+          </div>
+
+          <div class="ranking-list" *ngIf="topMonto.length; else noAmountTop">
+            <div class="ranking-row" *ngFor="let item of topMonto; let i = index; trackBy: trackByProducto">
+              <div class="ranking-row__meta">
+                <span class="ranking-index">{{ i + 1 }}</span>
+                <div>
+                  <strong>{{ item.nombre }}</strong>
+                  <small>{{ item.codigo }}</small>
+                </div>
+              </div>
+              <div class="ranking-row__value">
+                <strong>{{ item.total_cantidad }}</strong>
+                <small>uds. salidas</small>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noAmountTop>
+            <div class="empty-inline">
+              <mat-icon>inventory</mat-icon>
+              <p>Aún no hay productos con movimientos registrados.</p>
+            </div>
+          </ng-template>
+        </section>
+      </div>
+    </div>
+
+    <aside class="side-column">
+      <section class="panel-card side-card animate-fade-up">
+        <div class="panel-card__head">
+          <div>
+            <h2>Top 5 más solicitados</h2>
+            <p>Por cantidad de unidades despachadas</p>
+          </div>
+        </div>
+
+        <div class="top-qty" *ngIf="topCantidad.length; else noTopQty">
+          <div class="top-qty__row" *ngFor="let item of topCantidad; let i = index; trackBy: trackByProducto">
+            <span class="top-qty__index">#{{ i + 1 }}</span>
+            <div class="top-qty__copy">
+              <strong>{{ item.nombre }}</strong>
+              <small>{{ item.codigo }}</small>
+            </div>
+            <div class="top-qty__value">
+              <strong>{{ item.total_cantidad }}</strong>
+              <span>uds.</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noTopQty>
+          <div class="empty-side">
+            <mat-icon>inventory</mat-icon>
+            <h3>Sin datos</h3>
+            <p>Los productos más despachados aparecerán aquí.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="panel-card alerts-card animate-fade-up">
+        <div class="panel-card__head">
+          <div>
+            <h2>Alertas de stock</h2>
+            <p>Productos que requieren reposición</p>
+          </div>
+        </div>
+
+        <div class="alerts-list" *ngIf="resumen.alertas_stock.length; else noAlerts">
+          <div class="alert-row" *ngFor="let alerta of resumen.alertas_stock">
+            <div class="alert-row__copy">
+              <strong>{{ alerta.nombre }}</strong>
+              <small>{{ alerta.codigo }}</small>
+            </div>
+            <div class="alert-row__meta">
+              <span>Stock: {{ alerta.stock_actual }}</span>
+              <span>Mín: {{ alerta.stock_minimo }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noAlerts>
+          <div class="empty-side">
+            <mat-icon>verified</mat-icon>
+            <h3>¡Todo en orden!</h3>
+            <p>No hay productos bajo stock en este momento.</p>
+          </div>
+        </ng-template>
+      </section>
+    </aside>
+  </div>
+</div>
+
