@@ -36,6 +36,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/entornos/entorno.ts",
+                  "with": "src/entornos/entorno.prod.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
