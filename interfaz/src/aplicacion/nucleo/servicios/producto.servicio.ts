@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../entornos/entorno';
 import { Producto, ProductoCreate, ProductoImageUploadResponse, ProductoUpdate } from '../modelos/modelos-api';
 
 @Injectable({ providedIn: 'root' })
 export class ProductoService {
   private readonly base = `${environment.apiUrl}/productos`;
+  private cachedList$?: Observable<Producto[]>;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -14,8 +15,10 @@ export class ProductoService {
     let params = new HttpParams();
     if (busqueda?.trim()) {
       params = params.set('q', busqueda.trim());
+      return this.http.get<Producto[]>(this.base, { params });
     }
-    return this.http.get<Producto[]>(this.base, { params });
+    this.cachedList$ ??= this.http.get<Producto[]>(this.base, { params }).pipe(shareReplay(1));
+    return this.cachedList$;
   }
 
   getById(id: number): Observable<Producto> {
@@ -23,7 +26,7 @@ export class ProductoService {
   }
 
   create(payload: ProductoCreate): Observable<Producto> {
-    return this.http.post<Producto>(this.base, payload);
+    return this.http.post<Producto>(this.base, payload).pipe(tap(() => (this.cachedList$ = undefined)));
   }
 
   uploadImage(file: File): Observable<ProductoImageUploadResponse> {
@@ -33,11 +36,11 @@ export class ProductoService {
   }
 
   update(id: number, payload: ProductoUpdate): Observable<Producto> {
-    return this.http.put<Producto>(`${this.base}/${id}`, payload);
+    return this.http.put<Producto>(`${this.base}/${id}`, payload).pipe(tap(() => (this.cachedList$ = undefined)));
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+    return this.http.delete<void>(`${this.base}/${id}`).pipe(tap(() => (this.cachedList$ = undefined)));
   }
 
   resolveImageUrl(imageUrl: string | null | undefined): string | null {

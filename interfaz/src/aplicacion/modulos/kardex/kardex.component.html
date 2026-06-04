@@ -27,7 +27,7 @@
       </div>
       <div class="chip-data">
         <span class="chip-value">{{ totalMovimientos }}</span>
-        <span class="chip-label">Movimientos mostrados</span>
+        <span class="chip-label">Total filtrado</span>
       </div>
     </div>
     <div class="summary-chip">
@@ -36,7 +36,7 @@
       </div>
       <div class="chip-data">
         <span class="chip-value">{{ totalEntradas }}</span>
-        <span class="chip-label">Entradas</span>
+        <span class="chip-label">Entradas (pág.)</span>
       </div>
     </div>
     <div class="summary-chip">
@@ -45,7 +45,7 @@
       </div>
       <div class="chip-data">
         <span class="chip-value">{{ totalSalidas }}</span>
-        <span class="chip-label">Salidas</span>
+        <span class="chip-label">Salidas (pág.)</span>
       </div>
     </div>
     <div class="summary-chip">
@@ -54,7 +54,7 @@
       </div>
       <div class="chip-data">
         <span class="chip-value">{{ totalAjustes }}</span>
-        <span class="chip-label">Ajustes</span>
+        <span class="chip-label">Ajustes (pág.)</span>
       </div>
     </div>
   </div>
@@ -264,7 +264,15 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns" [class]="rowClass(row)"></tr>
     </table>
 
-    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 50, 100]" showFirstLastButtons aria-label="Seleccionar página del Kardex"></mat-paginator>
+    <mat-paginator
+      [length]="totalRows"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 15, 50, 100]"
+      showFirstLastButtons
+      aria-label="Seleccionar página del Kardex"
+      (page)="onPage($event)"
+    ></mat-paginator>
   </div>
 
   <div class="empty-state" *ngIf="!loading && (!hasRows || !hasVisibleRows)">

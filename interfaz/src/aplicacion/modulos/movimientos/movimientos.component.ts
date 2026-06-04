@@ -1,7 +1,7 @@
 // Movimientos
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { MatPaginator } from '@angular/material/paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
@@ -17,11 +17,14 @@ import { ProveedorService } from '../../nucleo/servicios/proveedor.servicio';
   styleUrls: ['./movimientos.component.scss'],
   standalone: false
 })
-export class MovimientosComponent implements OnInit, AfterViewInit {
+export class MovimientosComponent implements OnInit {
   displayedColumns = ['fecha_movimiento', 'producto', 'cliente', 'tipo', 'cantidad', 'stock', 'usuario_username'];
   dataSource = new MatTableDataSource<MovimientoLista>([]);
   loading = true;
   saving = false;
+  totalRows = 0;
+  pageIndex = 0;
+  pageSize = 15;
   productos: Producto[] = [];
   clientes: Cliente[] = [];
   proveedores: Proveedor[] = [];
@@ -37,8 +40,6 @@ export class MovimientosComponent implements OnInit, AfterViewInit {
     motivo: [''],
     observacion: ['']
   });
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -114,7 +115,7 @@ export class MovimientosComponent implements OnInit, AfterViewInit {
       next: (p) => (this.proveedores = p),
       error: () => this.snack.open('No se pudieron cargar proveedores para el formulario', 'Cerrar')
     });
-    this.refresh();
+    this.refreshFirstPage();
   }
 
   prefillFromQuery(): void {
@@ -128,22 +129,38 @@ export class MovimientosComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
+  refresh(): void {
+    this.loadPage(this.pageIndex, this.pageSize);
   }
 
-  refresh(): void {
+  refreshFirstPage(): void {
+    this.loadPage(0, this.pageSize);
+  }
+
+  onPage(e: PageEvent): void {
+    this.loadPage(e.pageIndex, e.pageSize);
+  }
+
+  private loadPage(pageIndex: number, pageSize: number): void {
     this.loading = true;
-    this.movimientos.list({ limit: 500 }).subscribe({
-      next: (rows) => {
-        this.dataSource.data = rows;
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.snack.open('No se pudieron cargar los movimientos', 'Cerrar');
-      }
-    });
+    this.movimientos
+      .listPaginated({
+        page: pageIndex + 1,
+        page_size: pageSize
+      })
+      .subscribe({
+        next: (res) => {
+          this.dataSource.data = res.items;
+          this.totalRows = res.total;
+          this.pageIndex = Math.max(0, (res.page ?? 1) - 1);
+          this.pageSize = res.page_size ?? pageSize;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.snack.open('No se pudieron cargar los movimientos', 'Cerrar');
+        }
+      });
   }
 
   submit(): void {
@@ -183,7 +200,7 @@ export class MovimientosComponent implements OnInit, AfterViewInit {
             motivo: '',
             observacion: ''
           });
-          this.refresh();
+          this.refreshFirstPage();
         },
         error: (err) => {
           this.saving = false;

@@ -1,7 +1,7 @@
 // Kardex
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
-import { MatPaginator } from '@angular/material/paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,6 +25,9 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   productoSearchCtrl = new FormControl<string>('', { nonNullable: true });
   loading = true;
   exporting = false;
+  totalRows = 0;
+  pageIndex = 0;
+  pageSize = 15;
   productos: Producto[] = [];
   productosFiltradosSelect: Producto[] = [];
   private readonly SELECT_LIMIT = 30;
@@ -38,7 +41,6 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
     fecha_hasta: ['']
   });
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
   private sub = new Subscription();
 
   constructor(
@@ -61,7 +63,7 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get visibleRows(): MovimientoLista[] {
-    return this.dataSource.filteredData;
+    return this.dataSource.data;
   }
 
   get hasVisibleRows(): boolean {
@@ -69,7 +71,7 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get totalMovimientos(): number {
-    return this.visibleRows.length;
+    return this.totalRows;
   }
 
   get totalEntradas(): number {
@@ -173,23 +175,10 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.dataSource.filterPredicate = (row: MovimientoLista, filter: string) => {
-      const q = filter.toLowerCase().trim();
-      if (!q) return true;
-      const code = (row.producto_codigo ?? '').toLowerCase();
-      const name = (row.producto_nombre ?? '').toLowerCase();
-      return code.includes(q) || name.includes(q);
-    };
-
     this.sub.add(
       this.searchCtrl.valueChanges
         .pipe(debounceTime(250), distinctUntilChanged())
-        .subscribe((val) => {
-          this.dataSource.filter = val.trim();
-          if (this.dataSource.paginator) {
-            this.dataSource.paginator.firstPage();
-          }
-        })
+        .subscribe(() => this.refreshFirstPage())
     );
 
     this.productoService.list().subscribe({
@@ -232,13 +221,13 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
           fecha_desde: q.get('fecha_desde') ?? '',
           fecha_hasta: q.get('fecha_hasta') ?? ''
         });
-        this.refresh();
+        this.refreshFirstPage();
       })
     );
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
+    this.refreshFirstPage();
   }
 
   ngOnDestroy(): void {
@@ -264,6 +253,18 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refresh(): void {
+    this.loadPage(this.pageIndex, this.pageSize);
+  }
+
+  refreshFirstPage(): void {
+    this.loadPage(0, this.pageSize);
+  }
+
+  onPage(e: PageEvent): void {
+    this.loadPage(e.pageIndex, e.pageSize);
+  }
+
+  private loadPage(pageIndex: number, pageSize: number): void {
     if (this.dateRangeError) {
       this.loading = false;
       this.dataSource.data = [];
@@ -273,18 +274,21 @@ export class KardexComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loading = true;
     const v = this.filters.getRawValue();
     this.movimientos
-      .list({
+      .listPaginated({
         producto_id: v.producto_id,
         tipo: (v.tipo?.trim() || null) as 'entrada' | 'salida' | 'ajuste' | null,
+        q: this.searchTerm || null,
         fecha_desde: v.fecha_desde?.trim() || null,
         fecha_hasta: v.fecha_hasta?.trim() || null,
-        limit: 2000
+        page: pageIndex + 1,
+        page_size: pageSize
       })
       .subscribe({
-        next: (rows) => {
-          this.dataSource.data = rows;
-          this.dataSource.filter = this.searchTerm;
-          this.paginator?.firstPage();
+        next: (res) => {
+          this.dataSource.data = res.items;
+          this.totalRows = res.total;
+          this.pageIndex = Math.max(0, (res.page ?? 1) - 1);
+          this.pageSize = res.page_size ?? pageSize;
           this.loading = false;
         },
         error: () => {
