@@ -1,8 +1,9 @@
 # Movimientos / Kardex
 from datetime import date, datetime, time, timedelta, timezone
 
+from sqlalchemy import or_
 from sqlalchemy import update as sa_update
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Query, Session, joinedload
 
 from aplicacion.excepciones import (
     CantidadInvalidaError,
@@ -14,7 +15,7 @@ from aplicacion.modelos.cliente import Cliente
 from aplicacion.modelos.movimiento import Movimiento
 from aplicacion.modelos.producto import Producto
 from aplicacion.modelos.proveedor import Proveedor
-from aplicacion.esquemas.movimiento import MovimientoCreate, MovimientoListaOut
+from aplicacion.esquemas.movimiento import MovimientoCreate, MovimientoListaOut, MovimientoPaginaOut
 
 
 def _get_producto_stock(db: Session, producto_id: int) -> int:
@@ -116,15 +117,15 @@ def registrar_movimiento(db: Session, usuario_id: int, payload: MovimientoCreate
         raise
 
 
-def list_movimientos_filtrados(
+def _build_movimientos_query(
     db: Session,
     *,
     producto_id: int | None = None,
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
-    limit: int = 500,
-) -> list[Movimiento]:
+    busqueda: str | None = None,
+) -> Query[Movimiento]:
     q = (
         db.query(Movimiento)
         .options(
@@ -145,6 +146,37 @@ def list_movimientos_filtrados(
     if fecha_hasta is not None:
         end = datetime.combine(fecha_hasta + timedelta(days=1), time.min, tzinfo=timezone.utc)
         q = q.filter(Movimiento.fecha_movimiento < end)
+    if busqueda is not None and busqueda.strip():
+        term = f"%{busqueda.strip()}%"
+        q = q.filter(
+            Movimiento.producto.has(
+                or_(
+                    Producto.codigo.ilike(term),
+                    Producto.nombre.ilike(term),
+                )
+            )
+        )
+    return q
+
+
+def list_movimientos_filtrados(
+    db: Session,
+    *,
+    producto_id: int | None = None,
+    tipo: str | None = None,
+    fecha_desde: date | None = None,
+    fecha_hasta: date | None = None,
+    busqueda: str | None = None,
+    limit: int = 500,
+) -> list[Movimiento]:
+    q = _build_movimientos_query(
+        db,
+        producto_id=producto_id,
+        tipo=tipo,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        busqueda=busqueda,
+    )
     if limit > 0:
         q = q.limit(min(limit, 2000))
     return list(q.all())
@@ -178,6 +210,7 @@ def list_movimientos_como_dto(
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
+    busqueda: str | None = None,
     limit: int = 500,
 ) -> list[MovimientoListaOut]:
     rows = list_movimientos_filtrados(
@@ -186,6 +219,43 @@ def list_movimientos_como_dto(
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
+        busqueda=busqueda,
         limit=limit,
     )
     return [movimiento_a_lista_out(m) for m in rows]
+
+
+def list_movimientos_paginados_como_dto(
+    db: Session,
+    *,
+    producto_id: int | None = None,
+    tipo: str | None = None,
+    fecha_desde: date | None = None,
+    fecha_hasta: date | None = None,
+    busqueda: str | None = None,
+    page: int = 1,
+    page_size: int = 15,
+) -> MovimientoPaginaOut:
+    current_page = max(page, 1)
+    current_page_size = max(1, min(page_size, 100))
+    q = _build_movimientos_query(
+        db,
+        producto_id=producto_id,
+        tipo=tipo,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        busqueda=busqueda,
+    )
+    total = q.order_by(None).count()
+    total_pages = max(1, (total + current_page_size - 1) // current_page_size)
+    if current_page > total_pages:
+        current_page = total_pages
+    offset = (current_page - 1) * current_page_size
+    rows = list(q.offset(offset).limit(current_page_size).all())
+    return MovimientoPaginaOut(
+        items=[movimiento_a_lista_out(m) for m in rows],
+        total=total,
+        page=current_page,
+        page_size=current_page_size,
+        total_pages=total_pages,
+    )

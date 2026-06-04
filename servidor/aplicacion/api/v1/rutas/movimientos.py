@@ -13,8 +13,12 @@ from aplicacion.excepciones import (
     TipoMovimientoInvalidoError,
 )
 from aplicacion.modelos.usuario import User
-from aplicacion.esquemas.movimiento import MovimientoCreate, MovimientoListaOut, MovimientoOut
-from aplicacion.servicios.servicio_movimiento import list_movimientos_como_dto, registrar_movimiento
+from aplicacion.esquemas.movimiento import MovimientoCreate, MovimientoListaOut, MovimientoOut, MovimientoPaginaOut
+from aplicacion.servicios.servicio_movimiento import (
+    list_movimientos_como_dto,
+    list_movimientos_paginados_como_dto,
+    registrar_movimiento,
+)
 
 router = APIRouter(prefix="/movimientos", tags=["movimientos"])
 
@@ -25,6 +29,7 @@ def list_movimientos(
     _: User = Depends(get_current_user),
     producto_id: int | None = Query(None, description="Filtrar por producto"),
     tipo: str | None = Query(None, description="entrada | salida | ajuste"),
+    q: str | None = Query(None, description="Buscar por codigo o nombre"),
     fecha_desde: date | None = Query(None),
     fecha_hasta: date | None = Query(None),
     limit: int = Query(500, ge=1, le=2000),
@@ -35,7 +40,32 @@ def list_movimientos(
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
+        busqueda=q,
         limit=limit,
+    )
+
+
+@router.get("/paginado", response_model=MovimientoPaginaOut)
+def list_movimientos_paginados(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+    producto_id: int | None = Query(None, description="Filtrar por producto"),
+    tipo: str | None = Query(None, description="entrada | salida | ajuste"),
+    q: str | None = Query(None, description="Buscar por codigo o nombre"),
+    fecha_desde: date | None = Query(None),
+    fecha_hasta: date | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(15, ge=1, le=100),
+):
+    return list_movimientos_paginados_como_dto(
+        db,
+        producto_id=producto_id,
+        tipo=tipo,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        busqueda=q,
+        page=page,
+        page_size=page_size,
     )
 
 

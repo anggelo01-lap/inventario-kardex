@@ -205,6 +205,14 @@ export interface MovimientoLista {
   fecha_movimiento: string;
 }
 
+export interface MovimientoPagina {
+  items: MovimientoLista[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 export interface MovimientoCreate {
   producto_id: number;
   cliente_id?: number | null;

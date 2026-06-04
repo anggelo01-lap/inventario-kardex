@@ -49,3 +49,11 @@ class MovimientoListaOut(BaseModel):
     fecha_movimiento: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MovimientoPaginaOut(BaseModel):
+    items: list[MovimientoListaOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

@@ -137,7 +137,8 @@
 
 /* ── Table ───────────────────────────────────────────────────────────── */
 .table-wrap {
-  overflow: hidden;
+  overflow: auto;
+  max-height: 60vh;
   border-radius: var(--radius-xl);
   background: rgba(255,255,255,0.035);
   border: 1px solid var(--color-border);
@@ -147,8 +148,12 @@
   table { width: 100%; }
 
   ::ng-deep .mat-mdc-header-row {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.08) !important;
     border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    backdrop-filter: blur(8px);
   }
 
   ::ng-deep .mat-mdc-header-cell {
@@ -190,8 +195,51 @@
 
   ::ng-deep .mat-mdc-paginator {
     border-top: 1px solid var(--color-border);
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.05) !important;
     color: var(--color-text-2);
+    font-size: 0.85rem;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    backdrop-filter: blur(8px);
+
+    .mat-mdc-paginator-container {
+      padding: 8px 16px;
+      justify-content: space-between;
+      flex-wrap: wrap-reverse;
+      gap: 12px;
+    }
+
+    .mat-mdc-paginator-page-size {
+      align-items: center;
+    }
+
+    .mat-mdc-paginator-page-size-label {
+      color: var(--color-text-3);
+      font-weight: 500;
+    }
+
+    .mat-mdc-paginator-range-label {
+      font-weight: 700;
+      color: var(--color-text-1);
+      margin: 0 16px;
+    }
+
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      color: var(--color-text-2);
+      &:hover:not(.mat-mdc-button-disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e11d48;
+      }
+    }
+
+    .mat-mdc-select-value {
+      color: var(--color-text-1);
+      font-weight: 600;
+    }
   }
 }
 

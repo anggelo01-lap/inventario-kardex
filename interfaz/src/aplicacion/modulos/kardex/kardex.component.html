@@ -156,6 +156,7 @@
   </div>
 
   <div class="active-filters" *ngIf="!loading && hasActiveFilters">
+    <span class="filters-label">Filtros activos:</span>
     <span class="active-chip" *ngIf="selectedProductoText">
       <mat-icon>inventory_2</mat-icon>
       {{ selectedProductoText }}
@@ -180,6 +181,14 @@
 
   <div *ngIf="loading" class="loading">
     <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="section-header" *ngIf="!loading && hasRows && hasVisibleRows">
+    <div class="section-title">
+      <span class="accent-bar"></span>
+      <span>Resultados del historial</span>
+    </div>
+    <span class="section-count">{{ totalMovimientos }} registros filtrados</span>
   </div>
 
   <div class="table-wrap mat-elevation-z2" *ngIf="!loading && hasRows && hasVisibleRows">
@@ -255,7 +264,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns" [class]="rowClass(row)"></tr>
     </table>
 
-    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 50, 100]" showFirstLastButtons></mat-paginator>
+    <mat-paginator [pageSize]="15" [pageSizeOptions]="[10, 15, 50, 100]" showFirstLastButtons aria-label="Seleccionar página del Kardex"></mat-paginator>
   </div>
 
   <div class="empty-state" *ngIf="!loading && (!hasRows || !hasVisibleRows)">

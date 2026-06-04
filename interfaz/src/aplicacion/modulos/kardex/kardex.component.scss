@@ -263,7 +263,18 @@
 .active-filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+  margin-bottom: 4px;
+}
+
+.filters-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+  margin-right: 4px;
 }
 
 .active-chip {
@@ -286,12 +297,53 @@
   }
 }
 
+/* ── Section Header ──────────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 4px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-2);
+}
+
+.accent-bar {
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e11d48, #be123c);
+  flex-shrink: 0;
+}
+
+.section-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-3);
+  backdrop-filter: blur(4px);
+}
+
 /* ── Loading ─────────────────────────────────────────────────────────── */
 .loading { display: flex; justify-content: center; padding: 40px; }
 
 /* ── Table Wrap ──────────────────────────────────────────────────────── */
 .table-wrap {
-  overflow: hidden;
+  overflow: auto;
+  max-height: 70vh;
   border-radius: var(--radius-xl) !important;
   background: rgba(255,255,255,0.035);
   border: 1px solid var(--color-border);
@@ -302,8 +354,12 @@
 
   /* Header */
   ::ng-deep .mat-mdc-header-row {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.08) !important;
     border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    backdrop-filter: blur(8px);
   }
 
   ::ng-deep .mat-mdc-header-cell {
@@ -348,8 +404,53 @@
   /* Paginator */
   ::ng-deep .mat-mdc-paginator {
     border-top: 1px solid var(--color-border);
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.05) !important;
     color: var(--color-text-2);
+    font-size: 0.85rem;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    backdrop-filter: blur(8px);
+
+    .mat-mdc-paginator-container {
+      padding: 8px 16px;
+      justify-content: space-between;
+      flex-wrap: wrap-reverse;
+      gap: 12px;
+    }
+
+    /* Ocultar el label de "Items per page" en móvil si es necesario, 
+       pero por ahora solo lo haremos más elegante */
+    .mat-mdc-paginator-page-size {
+      align-items: center;
+    }
+
+    .mat-mdc-paginator-page-size-label {
+      color: var(--color-text-3);
+      font-weight: 500;
+    }
+
+    .mat-mdc-paginator-range-label {
+      font-weight: 700;
+      color: var(--color-text-1);
+      margin: 0 16px;
+    }
+
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+      color: var(--color-text-2);
+      &:hover:not(.mat-mdc-button-disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e11d48;
+      }
+    }
+
+    .mat-mdc-select-value {
+      color: var(--color-text-1);
+      font-weight: 600;
+    }
   }
 }
 
