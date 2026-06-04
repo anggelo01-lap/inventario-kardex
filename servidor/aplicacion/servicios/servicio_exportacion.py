@@ -12,6 +12,14 @@ from aplicacion.servicios.servicio_movimiento import list_movimientos_filtrados,
 from aplicacion.servicios.servicio_producto import get_producto, list_productos
 
 
+def _excel_safe_datetime(value: datetime | None):
+    if value is None:
+        return None
+    if getattr(value, "tzinfo", None) is not None:
+        return value.replace(tzinfo=None)
+    return value
+
+
 def _ws_apply_header_style(ws, header_row: int = 1) -> None:
     header_fill = PatternFill("solid", fgColor="FF7F1D1D")
     header_font = Font(bold=True, color="FFFFFFFF")
@@ -179,7 +187,7 @@ def export_movimientos_xlsx(
         ws.append(
             [
                 dto.id,
-                dto.fecha_movimiento,
+                _excel_safe_datetime(dto.fecha_movimiento),
                 dto.producto_codigo or "",
                 dto.producto_nombre or "",
                 dto.tipo,
