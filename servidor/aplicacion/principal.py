@@ -58,6 +58,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["X-Request-ID", "Content-Disposition"],
+)
+
 
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
@@ -136,15 +146,6 @@ def custom_openapi() -> dict:
 
 
 app.openapi = custom_openapi
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
-)
 
 app.mount(
     settings.media_url_prefix,

@@ -13,14 +13,14 @@ from aplicacion.servicios.servicio_producto import get_producto, list_productos
 
 
 def _ws_apply_header_style(ws, header_row: int = 1) -> None:
-    header_fill = PatternFill("solid", fgColor="7F1D1D")
-    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="FF7F1D1D")
+    header_font = Font(bold=True, color="FFFFFFFF")
     header_alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
     border = Border(
-        left=Side(style="thin", color="334155"),
-        right=Side(style="thin", color="334155"),
-        top=Side(style="thin", color="334155"),
-        bottom=Side(style="thin", color="334155"),
+        left=Side(style="thin", color="FF334155"),
+        right=Side(style="thin", color="FF334155"),
+        top=Side(style="thin", color="FF334155"),
+        bottom=Side(style="thin", color="FF334155"),
     )
 
     for cell in ws[header_row]:
@@ -32,12 +32,12 @@ def _ws_apply_header_style(ws, header_row: int = 1) -> None:
 
 def _ws_apply_body_style(ws, *, start_row: int, end_row: int, end_col: int) -> None:
     border = Border(
-        left=Side(style="thin", color="1F2937"),
-        right=Side(style="thin", color="1F2937"),
-        top=Side(style="thin", color="1F2937"),
-        bottom=Side(style="thin", color="1F2937"),
+        left=Side(style="thin", color="FF1F2937"),
+        right=Side(style="thin", color="FF1F2937"),
+        top=Side(style="thin", color="FF1F2937"),
+        bottom=Side(style="thin", color="FF1F2937"),
     )
-    zebra = PatternFill("solid", fgColor="0B1220")
+    zebra = PatternFill("solid", fgColor="FF0B1220")
     body_alignment = Alignment(vertical="top", horizontal="left", wrap_text=True)
 
     for r in range(start_row, end_row + 1):
@@ -64,11 +64,11 @@ def _ws_finalize_table(ws, *, header_row: int, last_row: int, last_col: int) -> 
 def _tipo_color(tipo: str) -> PatternFill | None:
     t = (tipo or "").strip().lower()
     if t == "entrada":
-        return PatternFill("solid", fgColor="064E3B")
+        return PatternFill("solid", fgColor="FF064E3B")
     if t == "salida":
-        return PatternFill("solid", fgColor="7F1D1D")
+        return PatternFill("solid", fgColor="FF7F1D1D")
     if t == "ajuste":
-        return PatternFill("solid", fgColor="312E81")
+        return PatternFill("solid", fgColor="FF312E81")
     return None
 
 
@@ -139,8 +139,8 @@ def export_movimientos_xlsx(
 
     ws.append(["Movimientos (Kardex)"])
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=12)
-    ws["A1"].font = Font(bold=True, size=14, color="FFFFFF")
-    ws["A1"].fill = PatternFill("solid", fgColor="111827")
+    ws["A1"].font = Font(bold=True, size=14, color="FFFFFFFF")
+    ws["A1"].fill = PatternFill("solid", fgColor="FF111827")
     ws["A1"].alignment = Alignment(vertical="center", horizontal="left")
     ws.row_dimensions[1].height = 26
 
@@ -214,7 +214,7 @@ def export_movimientos_xlsx(
         fill = _tipo_color(str(tipo_cell.value or ""))
         if fill is not None:
             tipo_cell.fill = fill
-            tipo_cell.font = Font(bold=True, color="FFFFFF")
+            tipo_cell.font = Font(bold=True, color="FFFFFFFF")
             tipo_cell.alignment = Alignment(vertical="center", horizontal="center")
 
     bio = BytesIO()
