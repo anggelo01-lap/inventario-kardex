@@ -10,7 +10,8 @@
         <mat-icon>smart_toy</mat-icon>
       </div>
       <div class="chat-header__copy">
-        <h3>Asistente</h3>
+        <h3>Asistente de Inventario</h3>
+        <span class="chat-header__status">● En línea</span>
       </div>
     </header>
 
@@ -22,7 +23,7 @@
           </div>
           <div class="message__content">
             <div class="bubble">
-              <p>{{ msg.text }}</p>
+              <div class="bubble__text" [innerHTML]="msg.html"></div>
             </div>
             <div class="message-options" *ngIf="msg.options?.length && !loading">
               <button type="button" class="option-button" *ngFor="let option of msg.options" (click)="selectOption(option)">
@@ -31,6 +32,18 @@
             </div>
             <span class="message__time">{{ msg.time }}</span>
           </div>
+        </div>
+
+        <!-- Sugerencias rápidas -->
+        <div class="suggestions-row" *ngIf="showSuggestions && suggestions.length && !loading">
+          <button
+            type="button"
+            class="suggestion-chip"
+            *ngFor="let s of suggestions"
+            (click)="useSuggestion(s)"
+          >
+            {{ s.label }}
+          </button>
         </div>
 
         <div class="message" *ngIf="loading">
@@ -55,12 +68,12 @@
           #promptInput
           type="text"
           [formControl]="prompt"
-          placeholder="Escribe un mensaje"
+          placeholder="Pregúntame sobre inventario..."
           autocomplete="off"
         />
         <button class="send-button" type="submit" [disabled]="loading || prompt.invalid" aria-label="Enviar consulta">
           <mat-spinner *ngIf="loading" diameter="18"></mat-spinner>
-          <mat-icon *ngIf="!loading">north_east</mat-icon>
+          <mat-icon *ngIf="!loading">send</mat-icon>
         </button>
       </label>
     </form>

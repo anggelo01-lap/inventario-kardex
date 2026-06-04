@@ -1,9 +1,11 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {
   ChatbotHistorialItem,
   ChatbotMessageResponse,
-  ChatbotOption
+  ChatbotOption,
+  ChatbotSuggestion
 } from '../nucleo/modelos/modelos-api';
 import { AuthService } from '../nucleo/servicios/autenticacion.servicio';
 import { ChatbotService } from '../nucleo/servicios/chatbot.servicio';
@@ -11,6 +13,7 @@ import { ChatbotService } from '../nucleo/servicios/chatbot.servicio';
 interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
+  html: SafeHtml;
   time: string;
   options?: ChatbotOption[];
 }
@@ -21,27 +24,39 @@ interface ChatMessage {
   styleUrls: ['./chat-inventario.componente.scss'],
   standalone: false
 })
-export class ChatInventarioComponente {
+export class ChatInventarioComponente implements OnInit {
   @ViewChild('messageList') private readonly messageList?: ElementRef<HTMLDivElement>;
   @ViewChild('promptInput') private readonly promptInput?: ElementRef<HTMLInputElement>;
 
   opened = false;
   loading = false;
   prompt = new FormControl('', { nonNullable: true, validators: [Validators.required] });
+  suggestions: ChatbotSuggestion[] = [];
+  showSuggestions = true;
+
   messages: ChatMessage[] = [
     this.buildMessage(
       'assistant',
-      'Hola. ¿Que consulta necesitas?'
+      '👋 ¡Hola! Soy tu asistente de inventario. Puedo consultar stock, kardex, ventas, rankings y mucho más. ¿Qué necesitas?'
     )
   ];
+
   private contextoProductoId: number | null = null;
   private contextoProductoNombre: string | null = null;
   private readonly sessionId = this.loadSessionId();
 
   constructor(
     private readonly chatbot: ChatbotService,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
+    private readonly sanitizer: DomSanitizer
   ) {}
+
+  ngOnInit(): void {
+    this.chatbot.suggestions().subscribe({
+      next: (items) => (this.suggestions = items),
+      error: () => (this.suggestions = [])
+    });
+  }
 
   toggle(): void {
     this.opened = !this.opened;
@@ -65,9 +80,72 @@ export class ChatInventarioComponente {
       return;
     }
 
+    this.sendMessage(pregunta);
+  }
+
+  useSuggestion(suggestion: ChatbotSuggestion): void {
+    if (this.loading) return;
+    this.sendMessage(suggestion.label);
+    this.showSuggestions = false;
+  }
+
+  selectOption(option: ChatbotOption): void {
+    if (this.loading) {
+      return;
+    }
+    const userId = this.auth.getCurrentUser()?.id ?? 0;
+    this.loading = true;
+    this.messages = [...this.messages, this.buildMessage('user', `Selecciono: ${option.label}`)];
+    this.chatbot
+      .resolveOption({
+        session_id: this.sessionId,
+        selected_option_id: option.id,
+        user_id: userId
+      })
+      .subscribe({
+        next: (res: ChatbotMessageResponse) => this.handleChatbotResponse(res),
+        error: () => {
+          this.loading = false;
+          this.messages = [
+            ...this.messages,
+            this.buildMessage('assistant', '❌ No pude resolver la opción seleccionada. Intenta nuevamente.')
+          ];
+          this.scrollToBottom();
+          this.focusPrompt();
+        }
+      });
+  }
+
+  /** Convierte markdown básico a HTML seguro para renderizar en las burbujas */
+  formatMarkdown(text: string): SafeHtml {
+    let html = this.escapeHtml(text);
+
+    // Saltos de línea
+    html = html.replace(/\n/g, '<br>');
+
+    // Negritas **texto**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Itálica _texto_
+    html = html.replace(/(?<!\w)_(.+?)_(?!\w)/g, '<em>$1</em>');
+
+    // Viñetas con •
+    html = html.replace(/^• /gm, '<span class="md-bullet">•</span> ');
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private sendMessage(pregunta: string): void {
     this.messages = [...this.messages, this.buildMessage('user', pregunta)];
     this.prompt.setValue('');
     this.loading = true;
+    this.showSuggestions = false;
     this.scrollToBottom();
 
     const historial: ChatbotHistorialItem[] = this.messages.slice(-8).map((message) => ({
@@ -91,34 +169,7 @@ export class ChatInventarioComponente {
           this.loading = false;
           this.messages = [
             ...this.messages,
-            this.buildMessage('assistant', 'No pude responder ahora mismo. Intenta de nuevo en unos segundos.')
-          ];
-          this.scrollToBottom();
-          this.focusPrompt();
-        }
-      });
-  }
-
-  selectOption(option: ChatbotOption): void {
-    if (this.loading) {
-      return;
-    }
-    const userId = this.auth.getCurrentUser()?.id ?? 0;
-    this.loading = true;
-    this.messages = [...this.messages, this.buildMessage('user', `Selecciono: ${option.label}`)];
-    this.chatbot
-      .resolveOption({
-        session_id: this.sessionId,
-        selected_option_id: option.id,
-        user_id: userId
-      })
-      .subscribe({
-        next: (res: ChatbotMessageResponse) => this.handleChatbotResponse(res),
-        error: () => {
-          this.loading = false;
-          this.messages = [
-            ...this.messages,
-            this.buildMessage('assistant', 'No pude resolver la opcion seleccionada. Intenta nuevamente.')
+            this.buildMessage('assistant', '❌ No pude responder ahora mismo. Intenta de nuevo en unos segundos.')
           ];
           this.scrollToBottom();
           this.focusPrompt();
@@ -130,6 +181,7 @@ export class ChatInventarioComponente {
     return {
       role,
       text,
+      html: this.formatMarkdown(text),
       time: new Intl.DateTimeFormat('es-PE', {
         hour: '2-digit',
         minute: '2-digit'
