@@ -34,7 +34,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     full_name: str
-    email: EmailStr
+    email: str
     is_active: bool
     role: str = "usuario"
 
@@ -45,7 +45,7 @@ class UserMeOut(BaseModel):
     id: int
     username: str
     full_name: str
-    email: EmailStr
+    email: str
     role: str
     is_active: bool
 
