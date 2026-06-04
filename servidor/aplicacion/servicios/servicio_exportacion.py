@@ -21,14 +21,14 @@ def _excel_safe_datetime(value: datetime | None):
 
 
 def _ws_apply_header_style(ws, header_row: int = 1) -> None:
-    header_fill = PatternFill("solid", fgColor="FF7F1D1D")
+    header_fill = PatternFill("solid", fgColor="FFB91C1C")
     header_font = Font(bold=True, color="FFFFFFFF")
     header_alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
     border = Border(
-        left=Side(style="thin", color="FF334155"),
-        right=Side(style="thin", color="FF334155"),
-        top=Side(style="thin", color="FF334155"),
-        bottom=Side(style="thin", color="FF334155"),
+        left=Side(style="thin", color="FFCBD5E1"),
+        right=Side(style="thin", color="FFCBD5E1"),
+        top=Side(style="thin", color="FFCBD5E1"),
+        bottom=Side(style="thin", color="FFCBD5E1"),
     )
 
     for cell in ws[header_row]:
@@ -40,13 +40,14 @@ def _ws_apply_header_style(ws, header_row: int = 1) -> None:
 
 def _ws_apply_body_style(ws, *, start_row: int, end_row: int, end_col: int) -> None:
     border = Border(
-        left=Side(style="thin", color="FF1F2937"),
-        right=Side(style="thin", color="FF1F2937"),
-        top=Side(style="thin", color="FF1F2937"),
-        bottom=Side(style="thin", color="FF1F2937"),
+        left=Side(style="thin", color="FFE2E8F0"),
+        right=Side(style="thin", color="FFE2E8F0"),
+        top=Side(style="thin", color="FFE2E8F0"),
+        bottom=Side(style="thin", color="FFE2E8F0"),
     )
-    zebra = PatternFill("solid", fgColor="FF0B1220")
+    zebra = PatternFill("solid", fgColor="FFF8FAFC")
     body_alignment = Alignment(vertical="top", horizontal="left", wrap_text=True)
+    body_font = Font(color="FF0F172A")
 
     for r in range(start_row, end_row + 1):
         row_fill = zebra if (r - start_row) % 2 == 1 else None
@@ -54,6 +55,7 @@ def _ws_apply_body_style(ws, *, start_row: int, end_row: int, end_col: int) -> N
             cell = ws.cell(row=r, column=c)
             cell.border = border
             cell.alignment = body_alignment
+            cell.font = body_font
             if row_fill is not None:
                 cell.fill = row_fill
 
@@ -72,11 +74,11 @@ def _ws_finalize_table(ws, *, header_row: int, last_row: int, last_col: int) -> 
 def _tipo_color(tipo: str) -> PatternFill | None:
     t = (tipo or "").strip().lower()
     if t == "entrada":
-        return PatternFill("solid", fgColor="FF064E3B")
+        return PatternFill("solid", fgColor="FFDCFCE7")
     if t == "salida":
-        return PatternFill("solid", fgColor="FF7F1D1D")
+        return PatternFill("solid", fgColor="FFFEE2E2")
     if t == "ajuste":
-        return PatternFill("solid", fgColor="FF312E81")
+        return PatternFill("solid", fgColor="FFEDE9FE")
     return None
 
 
@@ -147,10 +149,12 @@ def export_movimientos_xlsx(
 
     ws.append(["Movimientos (Kardex)"])
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=12)
-    ws["A1"].font = Font(bold=True, size=14, color="FFFFFFFF")
-    ws["A1"].fill = PatternFill("solid", fgColor="FF111827")
+    accent = "FFB91C1C"
+    ws["A1"].font = Font(bold=True, size=16, color=accent)
+    ws["A1"].fill = PatternFill("solid", fgColor="FFFFFFFF")
     ws["A1"].alignment = Alignment(vertical="center", horizontal="left")
-    ws.row_dimensions[1].height = 26
+    ws["A1"].border = Border(bottom=Side(style="thick", color=accent))
+    ws.row_dimensions[1].height = 28
 
     ws.append(["Generado", datetime.now().strftime("%Y-%m-%d %H:%M")])
     ws.append(["Producto", producto_txt, "Tipo", tipo_txt, "Desde", desde_txt, "Hasta", hasta_txt, "Registros", len(rows)])
@@ -222,7 +226,7 @@ def export_movimientos_xlsx(
         fill = _tipo_color(str(tipo_cell.value or ""))
         if fill is not None:
             tipo_cell.fill = fill
-            tipo_cell.font = Font(bold=True, color="FFFFFFFF")
+            tipo_cell.font = Font(bold=True, color="FF0F172A")
             tipo_cell.alignment = Alignment(vertical="center", horizontal="center")
 
     bio = BytesIO()
@@ -276,23 +280,28 @@ def export_movimientos_pdf(
         def footer(self) -> None:
             self.set_y(-10)
             self.set_font("Helvetica", size=7)
-            self.set_text_color(148, 163, 184)
+            self.set_text_color(100, 116, 139)
             self.cell(0, 8, _pdf_safe(f"Página {self.page_no()}"), align="R")
 
     pdf = _MovimientosPdf(orientation="L", unit="mm", format="A4")
     pdf.set_auto_page_break(auto=True, margin=12)
     pdf.add_page()
-    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_text_color(15, 23, 42)
+    pdf.set_font("Helvetica", "B", 14)
     pdf.cell(
         0,
-        9,
+        8,
         _pdf_safe("Movimientos de inventario (Kardex)"),
         new_x=XPos.LMARGIN,
         new_y=YPos.NEXT,
     )
+    pdf.set_draw_color(185, 28, 28)
+    pdf.set_line_width(0.6)
+    pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+    pdf.ln(2)
 
     pdf.set_font("Helvetica", size=8)
-    pdf.set_text_color(148, 163, 184)
+    pdf.set_text_color(71, 85, 105)
     pdf.cell(0, 5, _pdf_safe(f"Generado: {generado_txt}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.cell(0, 5, _pdf_safe(f"Producto: {producto_txt}  |  Tipo: {tipo_txt}  |  Desde: {desde_txt}  |  Hasta: {hasta_txt}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.cell(
@@ -310,14 +319,15 @@ def export_movimientos_pdf(
     col_w = [14, 28, 18, 52, 14, 12, 18, 30, 45, 24]
     headers = ["ID", "Fecha", "Cod.", "Producto", "Tipo", "Cant.", "Stock", "Tercero", "Motivo", "Usuario"]
 
-    pdf.set_fill_color(30, 41, 59)
-    pdf.set_text_color(255, 255, 255)
+    pdf.set_fill_color(241, 245, 249)
+    pdf.set_text_color(15, 23, 42)
+    pdf.set_draw_color(203, 213, 225)
     pdf.set_font("Helvetica", "B", 7)
     for i, h in enumerate(headers):
         pdf.cell(col_w[i], 6, _pdf_safe(h), border=1, fill=True)
     pdf.ln()
 
-    pdf.set_text_color(226, 232, 240)
+    pdf.set_text_color(15, 23, 42)
     pdf.set_font("Helvetica", size=7)
     fill = False
     for m in rows:
@@ -345,8 +355,23 @@ def export_movimientos_pdf(
             dto.usuario_username[:18],
         ]
 
-        pdf.set_fill_color(15, 23, 42 if fill else 30)
+        if fill:
+            pdf.set_fill_color(248, 250, 252)
+        else:
+            pdf.set_fill_color(255, 255, 255)
+
         for i, cell in enumerate(line):
+            if i == 4:
+                if dto.tipo == "entrada":
+                    pdf.set_text_color(22, 163, 74)
+                elif dto.tipo == "salida":
+                    pdf.set_text_color(220, 38, 38)
+                elif dto.tipo == "ajuste":
+                    pdf.set_text_color(124, 58, 237)
+                else:
+                    pdf.set_text_color(15, 23, 42)
+            else:
+                pdf.set_text_color(15, 23, 42)
             pdf.cell(col_w[i], 6, _pdf_safe(cell), border=1, fill=fill)
         pdf.ln()
         fill = not fill
