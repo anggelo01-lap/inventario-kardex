@@ -412,6 +412,56 @@ def test_movimiento_can_link_cliente_and_audit_stock(client: TestClient) -> None
     assert body["stock_posterior"] == 5
 
 
+def test_usuario_solo_ve_sus_movimientos_en_listado_y_paginado(client: TestClient) -> None:
+    admin_headers = _auth_headers(client, username="angel")
+    user_headers = _auth_headers(client, username="operador")
+
+    categoria = _crear_categoria(client, admin_headers, "Roles Movimientos")
+    producto = _crear_producto(
+        client,
+        admin_headers,
+        categoria_id=categoria["id"],
+        codigo="ROL-001",
+        nombre="Producto Roles",
+        stock_inicial=50,
+        stock_minimo=0,
+        precio=10.0,
+    )
+
+    resp_admin_create = client.post(
+        "/api/v1/movimientos",
+        headers=admin_headers,
+        json={"producto_id": producto["id"], "tipo": "entrada", "cantidad": 2, "motivo": "Admin crea"},
+    )
+    assert resp_admin_create.status_code == 201
+
+    resp_user_create = client.post(
+        "/api/v1/movimientos",
+        headers=user_headers,
+        json={"producto_id": producto["id"], "tipo": "entrada", "cantidad": 3, "motivo": "Usuario crea"},
+    )
+    assert resp_user_create.status_code == 201
+
+    user_list = client.get("/api/v1/movimientos?limit=50", headers=user_headers)
+    assert user_list.status_code == 200
+    user_items = user_list.json()
+    assert len(user_items) >= 1
+    assert all(row["usuario_username"] == "operador" for row in user_items)
+
+    user_page = client.get("/api/v1/movimientos/paginado?page=1&page_size=50", headers=user_headers)
+    assert user_page.status_code == 200
+    user_page_items = user_page.json()["items"]
+    assert len(user_page_items) >= 1
+    assert all(row["usuario_username"] == "operador" for row in user_page_items)
+
+    admin_list = client.get("/api/v1/movimientos?limit=50", headers=admin_headers)
+    assert admin_list.status_code == 200
+    admin_items = admin_list.json()
+    usernames = {row["usuario_username"] for row in admin_items}
+    assert "angel" in usernames
+    assert "operador" in usernames
+
+
 def test_chatbot_answers_stock_and_daily_entries(client: TestClient) -> None:
     headers = _auth_headers(client)
     categoria = _crear_categoria(client, headers, "Chatbot")

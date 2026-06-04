@@ -121,6 +121,7 @@ def _build_movimientos_query(
     db: Session,
     *,
     producto_id: int | None = None,
+    usuario_id: int | None = None,
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
@@ -138,6 +139,8 @@ def _build_movimientos_query(
     )
     if producto_id is not None:
         q = q.filter(Movimiento.producto_id == producto_id)
+    if usuario_id is not None:
+        q = q.filter(Movimiento.usuario_id == usuario_id)
     if tipo is not None and tipo.strip():
         q = q.filter(Movimiento.tipo == tipo.strip())
     if fecha_desde is not None:
@@ -163,6 +166,7 @@ def list_movimientos_filtrados(
     db: Session,
     *,
     producto_id: int | None = None,
+    usuario_id: int | None = None,
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
@@ -172,6 +176,7 @@ def list_movimientos_filtrados(
     q = _build_movimientos_query(
         db,
         producto_id=producto_id,
+        usuario_id=usuario_id,
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
@@ -207,6 +212,7 @@ def list_movimientos_como_dto(
     db: Session,
     *,
     producto_id: int | None = None,
+    usuario_id: int | None = None,
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
@@ -216,6 +222,7 @@ def list_movimientos_como_dto(
     rows = list_movimientos_filtrados(
         db,
         producto_id=producto_id,
+        usuario_id=usuario_id,
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
@@ -229,6 +236,7 @@ def list_movimientos_paginados_como_dto(
     db: Session,
     *,
     producto_id: int | None = None,
+    usuario_id: int | None = None,
     tipo: str | None = None,
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
@@ -241,6 +249,7 @@ def list_movimientos_paginados_como_dto(
     q = _build_movimientos_query(
         db,
         producto_id=producto_id,
+        usuario_id=usuario_id,
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,

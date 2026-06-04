@@ -26,7 +26,7 @@ router = APIRouter(prefix="/movimientos", tags=["movimientos"])
 @router.get("", response_model=list[MovimientoListaOut])
 def list_movimientos(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    usuario_actual: User = Depends(get_current_user),
     producto_id: int | None = Query(None, description="Filtrar por producto"),
     tipo: str | None = Query(None, description="entrada | salida | ajuste"),
     q: str | None = Query(None, description="Buscar por codigo o nombre"),
@@ -34,9 +34,11 @@ def list_movimientos(
     fecha_hasta: date | None = Query(None),
     limit: int = Query(500, ge=1, le=2000),
 ):
+    usuario_id = None if (usuario_actual.role or "usuario") == "admin" else usuario_actual.id
     return list_movimientos_como_dto(
         db,
         producto_id=producto_id,
+        usuario_id=usuario_id,
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
@@ -48,7 +50,7 @@ def list_movimientos(
 @router.get("/paginado", response_model=MovimientoPaginaOut)
 def list_movimientos_paginados(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    usuario_actual: User = Depends(get_current_user),
     producto_id: int | None = Query(None, description="Filtrar por producto"),
     tipo: str | None = Query(None, description="entrada | salida | ajuste"),
     q: str | None = Query(None, description="Buscar por codigo o nombre"),
@@ -57,9 +59,11 @@ def list_movimientos_paginados(
     page: int = Query(1, ge=1),
     page_size: int = Query(15, ge=1, le=100),
 ):
+    usuario_id = None if (usuario_actual.role or "usuario") == "admin" else usuario_actual.id
     return list_movimientos_paginados_como_dto(
         db,
         producto_id=producto_id,
+        usuario_id=usuario_id,
         tipo=tipo,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
